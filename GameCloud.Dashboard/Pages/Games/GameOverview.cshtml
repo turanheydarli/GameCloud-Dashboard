@@ -1,0 +1,209 @@
+@page "/game/{gameId:guid}"
+
+@model GameOverviewModel
+
+@{
+    Layout = "_GameLayout";
+}
+
+<div class="container-fluid">
+<!-- Page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+            <h4 class="mb-sm-0">@Model.Game.Name Overview</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item">
+                        <a href="/games">Games</a>
+                    </li>
+                    <li class="breadcrumb-item active">@Model.Game.Name</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xxl-9">
+        <!-- Game stats card -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-4">
+                        <div class="avatar-xl">
+                            <div class="avatar-title bg-primary-subtle text-primary rounded fs-20">
+                                @Model.Game.Name.Substring(0, 1)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <h4 class="mb-2">@Model.Game.Name</h4>
+                        <p class="mb-1">
+                            <span class="fw-semibold">Created:</span> @Model.Game.CreatedAt.ToString("MMM d, yyyy")
+                        </p>
+                        <p class="mb-0">
+                            <span class="fw-semibold">Last Update:</span> @Model.Game.UpdatedAt.ToString("MMM d, yyyy")
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key stats -->
+        <div class="row">
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p class="fw-medium text-muted mb-0">Total Players</p>
+                                @* <h2 class="mt-4 ff-secondary">@Model.Game.PlayerCount</h2> *@
+                                <h2 class="mt-4 ff-secondary">200</h2>
+                            </div>
+                            <div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-info text-info rounded-circle fs-4">
+                                        <i class="ri-user-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p class="fw-medium text-muted mb-0">Active Players</p>
+                                @* <h2 class="mt-4 ff-secondary">@Model.Game.ActivePlayerCount</h2> *@
+                                <h2 class="mt-4 ff-secondary">20</h2>
+                            </div>
+                            <div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-info text-info rounded-circle fs-4">
+                                        <i class="mdi mdi-account-convert"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p class="fw-medium text-muted mb-0">Functions</p>
+                                @* <h2 class="mt-4 ff-secondary">@Model.Game.FunctionCount</h2> *@
+                                <h2 class="mt-4 ff-secondary">2</h2>
+                            </div>
+                            <div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-warning text-warning rounded-circle fs-4">
+                                        <i class="ri-function-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p class="fw-medium text-muted mb-0">Keys</p>
+                                 <h2 class="mt-4 ff-secondary">@Model.Keys.Count</h2> 
+                            </div>
+                            <div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-success text-success rounded-circle fs-4">
+                                        <i class="ri-key-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Recent Activity</h5>
+                @* @if (Model.Game.RecentActivity.Any()) *@
+                @* { *@
+                @* <div class="table-responsive"> *@
+                @*     <table class="table align-middle table-nowrap mb-0"> *@
+                @*         <thead> *@
+                @*         <tr> *@
+                @*             <th scope="col">Event</th> *@
+                @*             <th scope="col">Timestamp</th> *@
+                @*             <th scope="col">Details</th> *@
+                @*         </tr> *@
+                @*         </thead> *@
+                @*         <tbody> *@
+                @*         @foreach(var activity in Model.Game.RecentActivity) *@
+                @*         { *@
+                @*         <tr> *@
+                @*             <td>@activity.EventType</td> *@
+                @*             <td>@activity.Timestamp</td> *@
+                @*             <td>@activity.Details</td> *@
+                @*         </tr> *@
+                @*         } *@
+                @*         </tbody> *@
+                @*     </table> *@
+                @* </div> *@
+                @* } *@
+                @* else *@
+                @{
+                <div class="alert alert-info">No recent activity found.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-3">
+        <!-- Game Details -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Game Details</h5>
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                        <tr>
+                            <th class="ps-0" scope="row">ID :</th>
+                            <td class="text-muted">@Model.Game.Id</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Actions -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Key Actions</h5>
+                <div class="d-grid gap-2">
+                    <a class="btn btn-primary" href="/game/@Model.Game.Id/keys/create">
+                        <i class="ri-key-line align-bottom me-1"></i> Create New Key
+                    </a>
+                    <a class="btn btn-outline-primary" href="/game/@Model.Game.Id/keys">
+                        <i class="ri-key-2-line align-bottom me-1"></i> Manage Keys
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

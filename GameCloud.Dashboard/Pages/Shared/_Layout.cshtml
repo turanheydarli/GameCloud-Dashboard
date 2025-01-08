@@ -1,0 +1,83 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    var config = new ViewConfiguration
+    {
+        Title = ViewData["Title"]?.ToString() ?? "Dashboard",
+        Description = "Game Cloud - Backend as a Service Platform",
+        Styles = new List<string>
+        {
+            Url.Content("~/css/bootstrap.min.css"),
+            Url.Content("~/css/icons.min.css"),
+            Url.Content("~/css/app.min.css"),
+            Url.Content("~/css/custom.min.css")
+        },
+        Scripts = new List<string>
+        {
+            Url.Content("~/libs/bootstrap/js/bootstrap.bundle.min.js"),
+            Url.Content("~/libs/simplebar/simplebar.min.js"),
+            Url.Content("~/libs/node-waves/waves.min.js"),
+            Url.Content("~/libs/feather-icons/feather.min.js"),
+            Url.Content("~/js/pages/plugins/lord-icon-2.1.0.js"),
+            Url.Content("~/js/plugins.js"),
+            Url.Content("~/libs/apexcharts/apexcharts.min.js"),
+            Url.Content("~/libs/jsvectormap/js/jsvectormap.min.js"),
+            Url.Content("~/libs/jsvectormap/maps/world-merc.js"),
+            Url.Content("~/libs/swiper/swiper-bundle.min.js"),
+            Url.Content("~/js/pages/dashboard-ecommerce.init.js"),
+            Url.Content("~/js/app.js"),
+        },
+    };
+}
+
+<!DOCTYPE html>
+<html lang="en"
+      data-layout="vertical"
+      data-topbar="light"
+      data-sidebar="dark"
+      data-sidebar-size="lg"
+      data-sidebar-image="none"
+      data-preloader="disable"
+      data-theme="default"
+      data-theme-colors="default">
+
+@await Component.InvokeAsync("PageHeader", config)
+
+<body>
+<div id="layout-wrapper">
+    @await Component.InvokeAsync("AppHeader", config)
+
+    <partial name="Partials/_AppMenu"/>
+
+    <div class="vertical-overlay"></div>
+
+    <div class="main-content">
+        <div class="page-content">
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            @RenderBody()
+        </div>
+        <partial name="Partials/_Footer"/>
+    </div>
+</div>
+
+<button onclick="topFunction()" class="btn btn-danger btn-icon" id="back-to-top">
+    <i class="ri-arrow-up-line"></i>
+</button>
+
+<div id="preloader">
+    <div id="status">
+        <div class="spinner-border text-primary avatar-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+
+@foreach (var script in config.Scripts)
+{
+    <script src="@script"></script>
+}
+
+@await RenderSectionAsync("Scripts", false)
+</body>
+</html>

@@ -1,0 +1,83 @@
+@{
+    var config = new ViewConfiguration
+    {
+        Title = ViewData["Title"]?.ToString() ?? "Dashboard",
+        Description = "Game Cloud - Backend as a Service Platform",
+        Styles = new List<string>
+        {
+            Url.Content("~/css/bootstrap.min.css"),
+            Url.Content("~/css/icons.min.css"),
+            Url.Content("~/css/app.min.css"),
+            Url.Content("~/css/custom.min.css")
+        },
+        Scripts = new List<string>
+        {
+            Url.Content("~/libs/bootstrap/js/bootstrap.bundle.min.js"),
+            Url.Content("~/libs/simplebar/simplebar.min.js"),
+            Url.Content("~/libs/node-waves/waves.min.js"),
+            Url.Content("~/libs/feather-icons/feather.min.js"),
+            Url.Content("~/js/pages/plugins/lord-icon-2.1.0.js"),
+            Url.Content("~/js/plugins.js"),
+            Url.Content("~/libs/apexcharts/apexcharts.min.js"),
+            Url.Content("~/libs/jsvectormap/js/jsvectormap.min.js"),
+            Url.Content("~/libs/jsvectormap/maps/world-merc.js"),
+            Url.Content("~/libs/swiper/swiper-bundle.min.js"),
+            Url.Content("~/js/pages/dashboard-ecommerce.init.js"),
+            Url.Content("~/js/app.js"),
+        },
+    };
+}
+
+<!DOCTYPE html>
+<html lang="en"
+      data-layout="vertical"
+      data-topbar="light"
+      data-sidebar="dark"
+      data-sidebar-size="lg"
+      data-sidebar-image="none"
+      data-preloader="disable"
+      data-theme="default"
+      data-theme-colors="default">
+
+@await Component.InvokeAsync("PageHeader", config)
+<body>
+<div class="auth-page-wrapper pt-5">
+    <!-- Auth background with particles -->
+    <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
+        <div class="bg-overlay"></div>
+        <div class="shape">
+            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1440 120">
+                <path d="M 0,36 C 144,53.6 432,123.2 720,124 C 1008,124.8 1296,56.8 1440,40L1440 140L0 140z"></path>
+            </svg>
+        </div>
+    </div>
+
+    <div class="auth-page-content">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="text-center mt-sm-5 mb-4 text-white-50">
+                        <div>
+                            <a href="index.html" class="d-inline-block auth-logo">
+                                <img src="~/images/logo-light.png" alt="" height="20">
+                            </a>
+                        </div>
+                        <p class="mt-3 fs-15 fw-medium">Empower Your Game, Scale Without Limits</p>
+                    </div>
+                </div>
+            </div>
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            @RenderBody()
+        </div>
+    </div>
+    <partial name="Partials/_Footer"/>
+</div>
+
+@foreach (var script in config.Scripts)
+{
+    <script src="@script"></script>
+}
+
+</body>
+</html>

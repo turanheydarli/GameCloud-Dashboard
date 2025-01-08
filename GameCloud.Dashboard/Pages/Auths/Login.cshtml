@@ -1,0 +1,54 @@
+@page "/login"
+
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_AuthLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 col-xl-5">
+        <div class="card mt-4 card-bg-fill">
+            <div class="card-body p-4">
+                <div class="text-center mt-2">
+                    <h5 class="text-primary">Welcome Back!</h5>
+                    <p class="text-muted">Sign in to continue to Game Cloud.</p>
+                </div>
+                <form method="post" class="p-2 mt-4">
+                    <div class="mb-3">
+                        <label asp-for="LoginRequest.Email" class="form-label">Email</label>
+                        <input asp-for="LoginRequest.Email" class="form-control" placeholder="Enter username"/>
+                        <span asp-validation-for="LoginRequest.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="float-end">
+                            <a asp-page="./ForgotPassword" class="text-muted">Forgot password?</a>
+                        </div>
+                        <label asp-for="LoginRequest.Password" class="form-label">Password</label>
+                        <div class="position-relative auth-pass-inputgroup mb-3">
+                            <input asp-for="LoginRequest.Password" type="password" class="form-control pe-5" placeholder="Enter password"/>
+                            <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button">
+                                <i class="ri-eye-fill align-middle"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="LoginRequest.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mt-4">
+                        <button class="btn btn-success w-100" type="submit">Sign In</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="mt-4 text-center">
+            <p class="mb-0">Don't have an account? <a asp-page="./register" class="fw-semibold text-primary text-decoration-underline">Signup</a></p>
+        </div>
+    </div>
+</div>
+
+@* *@
+@* @section Scripts { *@
+@* <partial name="_ValidationScriptsPartial" /> *@
+@* } *@

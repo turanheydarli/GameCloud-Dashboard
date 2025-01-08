@@ -1,0 +1,169 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    var config = new ViewConfiguration
+    {
+        Title = ViewData["Title"]?.ToString() ?? "Dashboard",
+        Description = "Game Cloud - Backend as a Service Platform",
+        Styles = new List<string>
+        {
+            Url.Content("~/css/bootstrap.min.css"),
+            Url.Content("~/css/icons.min.css"),
+            Url.Content("~/css/app.min.css"),
+            Url.Content("~/css/custom.min.css")
+        },
+        Scripts = new List<string>
+        {
+            Url.Content("~/libs/bootstrap/js/bootstrap.bundle.min.js"),
+            Url.Content("~/libs/simplebar/simplebar.min.js"),
+            Url.Content("~/libs/node-waves/waves.min.js"),
+            Url.Content("~/libs/feather-icons/feather.min.js"),
+            Url.Content("~/js/pages/plugins/lord-icon-2.1.0.js"),
+            Url.Content("~/js/plugins.js"),
+            Url.Content("~/libs/apexcharts/apexcharts.min.js"),
+            Url.Content("~/libs/jsvectormap/js/jsvectormap.min.js"),
+            Url.Content("~/libs/jsvectormap/maps/world-merc.js"),
+            Url.Content("~/libs/swiper/swiper-bundle.min.js"),
+            Url.Content("~/js/pages/dashboard-ecommerce.init.js"),
+            Url.Content("~/js/app.js"),
+        },
+    };
+
+    var gameId = Context.Request.RouteValues["gameId"];
+}
+
+<!DOCTYPE html>
+<html lang="en"
+      data-layout="vertical"
+      data-topbar="light"
+      data-sidebar="dark"
+      data-sidebar-size="lg"
+      data-sidebar-image="none"
+      data-preloader="disable"
+      data-theme="default"
+      data-theme-colors="default">
+
+@await Component.InvokeAsync("PageHeader", config)
+
+<body>
+<div id="layout-wrapper">
+    @await Component.InvokeAsync("AppHeader", config)
+
+    <div class="app-menu navbar-menu">
+        <partial name="Partials/_AppMenuLogo"></partial>
+
+        <div id="scrollbar">
+            <div class="container-fluid">
+                <div id="two-column-menu"></div>
+                <ul class="navbar-nav" id="navbar-nav">
+                    <li class="menu-title">
+                        <i class="ri-more-fill"></i> <span data-key="t-components">Game Management</span>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="/game/@gameId">
+                            <i class="ri-dashboard-line"></i> <span data-key="t-dashboards">Overview</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#sidebarKeys" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarKeys">
+                            <i class="ri-key-line"></i> <span data-key="t-keys">Keys</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarKeys">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/keys#sidebarKeys" class="nav-link" data-key="t-key-list">Key List</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#sidebarFunctions" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarFunctions">
+                            <i class="ri-function-line"></i> <span data-key="t-functions">Functions</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarFunctions">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/functions#sidebarFunctions" class="nav-link" data-key="t-function-list">Function List</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/functions/create#sidebarFunctions" class="nav-link" data-key="t-create-function">Create Function</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#sidebarLogs" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarLogs">
+                            <i class="ri-file-list-3-line"></i> <span data-key="t-logs">Logs</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarLogs">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/logs" class="nav-link" data-key="t-log-list">Log List</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/logs/errors" class="nav-link" data-key="t-error-logs">Error Logs</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#sidebarPlayers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarPlayers">
+                            <i class="ri-user-line"></i> <span data-key="t-players">Players</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarPlayers">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/players" class="nav-link" data-key="t-player-list">Player List</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/players/groups" class="nav-link" data-key="t-player-groups">Player Groups</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/players/bans" class="nav-link" data-key="t-player-bans">Player Bans</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="vertical-overlay"></div>
+
+    <div class="main-content">
+        <div class="page-content">
+            <div class="container-fluid">
+                @RenderBody()
+            </div>
+        </div>
+
+        <partial name="Partials/_Footer"/>
+    </div>
+</div>
+
+<button onclick="topFunction()" class="btn btn-danger btn-icon" id="back-to-top">
+    <i class="ri-arrow-up-line"></i>
+</button>
+
+<div id="preloader">
+    <div id="status">
+        <div class="spinner-border text-primary avatar-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+
+@foreach (var script in config.Scripts)
+{
+    <script src="@script"></script>
+}
+
+@await RenderSectionAsync("Scripts", false)
+</body>
+</html>

@@ -1,0 +1,303 @@
+@page "/games"
+@model GamesModel
+@{
+    ViewData["Title"] = "My Games";
+}
+
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+                <h4 class="mb-sm-0">My Games</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item active">Games</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-auto">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGameModal">
+                <i class="ri-gamepad-line align-bottom me-1"></i> Create New Game
+            </button>
+        </div>
+        <div class="col-sm">
+            <div class="d-flex justify-content-sm-end">
+                <div class="search-box">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search games..." value="@Model.SearchQuery">
+                    <i class="ri-search-line search-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Games Grid -->
+    <div class="row g-4" id="gamesGrid">
+        @if (Model.Games?.Items == null)
+        {
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (!Model.Games.Items.Any())
+        {
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body py-5">
+                        <div class="text-center">
+                            <div class="avatar-lg mx-auto mb-4">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                                    <i class="ri-gamepad-line"></i>
+                                </div>
+                            </div>
+                            <h5>Ready to Create Your First Game?</h5>
+                            <p class="text-muted mb-4">Get started by creating your first game on GameCloud!</p>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGameModal">
+                                <i class="ri-add-line align-bottom me-1"></i> Create New Game
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            foreach (var game in Model.Games.Items)
+            {
+                <div class="col-xxl-3 col-md-6">
+                    <div class="card card-hover border-0 shadow-sm h-100">
+                        <!-- Game Status Badge -->
+                        <div class="position-absolute top-0 end-0 m-3">
+                            <span class="badge bg-success-subtle text-success">
+                                <i class="ri-checkbox-circle-line align-bottom"></i> Active
+                            </span>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <!-- Game Icon & Title -->
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar-md position-relative">
+                                        @if (game.ImageUrl != null)
+                                        {
+                                            <img src="@game.ImageUrl" class="avatar-md rounded" alt="@game.Name">
+                                            <button class="btn btn-sm btn-icon btn-light position-absolute bottom-0 end-0"
+                                                    onclick="openImageUpload('@game.Id')">
+                                                <i class="ri-camera-line"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <div class="avatar-title bg-primary-subtle text-primary rounded"
+                                                 onclick="openImageUpload('@game.Id')"
+                                                 style="cursor: pointer;">
+                                                <i class="ri-gamepad-line fs-24"></i>
+                                            </div>
+                                        }
+                                        <input type="file"
+                                               id="imageUpload_@game.Id"
+                                               style="display: none;"
+                                               accept="image/*"
+                                               onchange="uploadGameImage(event, '@game.Id')"/>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h5 class="fs-16 mb-1">
+                                        <a href="/game/@game.Id" class="text-body">@game.Name</a>
+                                    </h5>
+                                    <p class="text-muted mb-0">
+                                        <i class="ri-time-line align-bottom me-1"></i>
+                                        Updated @game.UpdatedAt.ToString("g")
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <p class="text-muted mb-4" style="height: 3em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                @game.Description
+                            </p>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex align-items-center gap-2">
+                                <a href="/game/@game.Id" class="btn btn-sm btn-soft-primary flex-grow-1">
+                                    <i class="ri-eye-line align-bottom me-1"></i> View Details
+                                </a>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-icon btn-soft-secondary" data-bs-toggle="dropdown">
+                                        <i class="ri-more-2-fill"></i>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end">
+                                        <a class="dropdown-item" href="/game/@game.Id/edit">
+                                            <i class="ri-pencil-line align-bottom me-2 text-muted"></i> Edit Game
+                                        </a>
+                                        <a class="dropdown-item" href="/game/@game.Id/keys">
+                                            <i class="ri-key-line align-bottom me-2 text-muted"></i> Manage Keys
+                                        </a>
+                                        <a class="dropdown-item" href="/game/@game.Id/functions">
+                                            <i class="ri-function-line align-bottom me-2 text-muted"></i> Game Functions
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
+                                           data-bs-target="#deleteGameModal" data-game-id="@game.Id">
+                                            <i class="ri-delete-bin-line align-bottom me-2"></i> Delete Game
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Create Game Modal -->
+<div class="modal fade" id="createGameModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data" asp-page-handler="Create">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header border-bottom-dashed">
+                    <h5 class="modal-title">Create New Game</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label asp-for="GameRequest.Name" class="form-label">Game Name</label>
+                        <input type="text" class="form-control" asp-for="GameRequest.Name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="GameRequest.Description" class="form-label">Description</label>
+                        <textarea class="form-control" asp-for="GameRequest.Description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Game Icon (Optional)</label>
+                        <input type="file" class="form-control" name="image" accept="image/*">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-dashed">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ri-add-line align-bottom me-1"></i> Create Game
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Game Modal -->
+<div class="modal fade" id="deleteGameModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-dashed">
+                <h5 class="modal-title">Delete Game</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div class="text-center">
+                    <div class="avatar-lg mx-auto mb-3">
+                        <div class="avatar-title bg-danger-subtle text-danger rounded-circle fs-24">
+                            <i class="ri-delete-bin-line"></i>
+                        </div>
+                    </div>
+                    <h5>Are you sure?</h5>
+                    <p class="text-muted mb-0">This action cannot be undone. All game data will be permanently removed.</p>
+                </div>
+            </div>
+            <div class="modal-footer border-top-dashed">
+                <form method="post" asp-page-handler="Delete">
+                    <input type="hidden" id="deleteGameId" name="id"/>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ri-delete-bin-line align-bottom me-1"></i> Delete Game
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchQuery = e.target.value;
+            updateUrl(searchQuery);
+        }, 500);
+    });
+
+    function updateUrl(searchQuery) {
+        const url = new URL(window.location);
+        if (searchQuery) {
+            url.searchParams.set('searchQuery', searchQuery);
+        } else {
+            url.searchParams.delete('searchQuery');
+        }
+        window.location.href = url.toString();
+    }
+
+    // Delete game modal handling
+    const deleteGameModal = document.getElementById('deleteGameModal');
+    if (deleteGameModal) {
+        deleteGameModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            const gameId = button.getAttribute('data-game-id');
+            const modalInput = deleteGameModal.querySelector('#deleteGameId');
+            modalInput.value = gameId;
+        });
+    }
+
+    // Image upload handling
+    function openImageUpload(gameId) {
+        document.getElementById(`imageUpload_${gameId}`).click();
+    }
+
+    async function uploadGameImage(event, gameId) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch(`?handler=UploadImage&id=${gameId}`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            });
+
+            if (!response.ok) throw new Error('Upload failed');
+
+            // Refresh the page to show the new image
+            window.location.reload();
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            // Show error message using your preferred notification system
+            alert('Failed to upload image. Please try again.');
+        }
+    }
+</script>
+}

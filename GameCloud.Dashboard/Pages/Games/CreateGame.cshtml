@@ -1,0 +1,117 @@
+@page "/games/create-game"
+
+@model CreateGameModel
+@{
+    ViewData["Title"] = "Create New Game";
+}
+
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+                <h4 class="mb-0">Create New Game</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item">
+                            <a href="/games">Games</a>
+                        </li>
+                        <li class="breadcrumb-item active">Create Game</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Game Details</h4>
+                    <p class="text-muted mt-1 mb-0">Create your new game by providing the basic information below</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="createGameForm">
+                        <div class="row gy-4">
+                            <!-- Game Name -->
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label asp-for="Game.Name" class="form-label">Game Name <span class="text-danger">*</span></label>
+                                    <input asp-for="Game.Name" class="form-control form-control-lg" required
+                                           placeholder="Enter a unique and memorable name for your game">
+                                    <span asp-validation-for="Game.Name" class="text-danger"></span>
+                                    <div class="form-text">Choose a distinctive name that represents your game's identity</div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label asp-for="Game.Description" class="form-label">Description <span class="text-danger">*</span></label>
+                                    <textarea asp-for="Game.Description" class="form-control" rows="4" required
+                                              placeholder="Describe what makes your game special"></textarea>
+                                    <span asp-validation-for="Game.Description" class="text-danger"></span>
+                                    <div class="form-text">Provide a clear and engaging description of your game</div>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Settings Toggle -->
+                            <div class="col-12">
+                                <div class="d-flex align-items-center mb-3">
+                                    <button class="btn btn-link text-muted p-0" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#advancedSettings">
+                                        <i class="ri-settings-4-line me-1"></i> Advanced Settings
+                                    </button>
+                                </div>
+
+                                <div class="collapse" id="advancedSettings">
+                                    <div class="card border">
+                                        <div class="card-body">
+                                            <!-- Firebase Configuration -->
+                                            <h5 class="card-title mb-3">Firebase Configuration</h5>
+                                            <div class="row g-3 mb-4">
+                                                <div class="col-md-6">
+                                                    <label asp-for="Game.FirebaseProjectId" class="form-label">Firebase Project ID</label>
+                                                    <input asp-for="Game.FirebaseProjectId" class="form-control"
+                                                           placeholder="your-project-id">
+                                                    <span asp-validation-for="Game.FirebaseProjectId" class="text-danger"></span>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label asp-for="Game.FirebaseApiKey" class="form-label">API Key</label>
+                                                    <input asp-for="Game.FirebaseApiKey" class="form-control" type="password">
+                                                    <span asp-validation-for="Game.FirebaseApiKey" class="text-danger"></span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Game Status -->
+                                            <h5 class="card-title mb-3">Game Status</h5>
+                                            <div class="form-check form-switch">
+                                                <input asp-for="Game.IsEnabled" checked="checked" class="form-check-input" type="checkbox">
+                                                <label asp-for="Game.IsEnabled" class="form-check-label">Enable Game</label>
+                                                <div class="form-text">Enable this to make your game visible to players</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a href="/games" class="btn btn-light">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ri-gamepad-line me-1"></i> Create Game
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

@@ -1,0 +1,20 @@
+@model ViewConfiguration
+
+<head>
+    <meta charset="utf-8"/>
+    <title>@Model.Title | Game Cloud</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="@Model.Description"/>
+
+    @foreach (var tag in Model.MetaTags)
+    {
+        <meta name="@tag.Key" content="@tag.Value"/>
+    }
+
+    <link rel="shortcut icon" href="~/images/favicon.ico">
+    <script src="~/js/layout.js"></script>
+    @foreach (var style in Model.Styles)
+    {
+        <link href="@style" rel="stylesheet" type="text/css"/>
+    }
+</head>
