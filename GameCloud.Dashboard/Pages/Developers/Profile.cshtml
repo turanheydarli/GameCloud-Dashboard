@@ -52,6 +52,7 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="tab-content">
+                        
                         <div class="tab-pane active" id="personalDetails" role="tabpanel">
                             <form asp-page="./" method="post">
                                 @Html.HiddenFor(m => m.Developer.Id)
@@ -75,7 +76,7 @@
                                             <label asp-for="Developer.Email" class="form-label">Email Address</label>
                                             <input readonly="readonly" asp-for="Developer.Email" type="email"
                                                    class="form-control" id="emailInput" placeholder="Email address"
-                                                   value="@Model.Developer.Email" />
+                                                   value="@Model.Developer.Email"/>
                                         </div>
                                     </div>
 
