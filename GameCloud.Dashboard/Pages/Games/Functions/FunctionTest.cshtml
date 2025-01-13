@@ -1,0 +1,317 @@
+@page "/game/{gameId:guid}/functions/{functionId:guid}/test"
+@model FunctionTestModel
+
+@{
+Layout = "_GameLayout";
+}
+
+<div class="container-fluid">
+    <!-- Page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+                <h4 class="mb-sm-0">Test Function: @Model.Function.Name</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="/games">Games</a></li>
+                        <li class="breadcrumb-item"><a href="/game/@Model.GameId">@Model.Game.Name</a></li>
+                        <li class="breadcrumb-item"><a href="/game/@Model.GameId/functions">Functions</a></li>
+                        <li class="breadcrumb-item active">Test Function</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Function Details -->
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Function Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                            <tr>
+                                <th class="ps-0" scope="row">Name:</th>
+                                <td class="text-muted">@Model.Function.Name</td>
+                            </tr>
+                            <tr>
+                                <th class="ps-0" scope="row">Action Type:</th>
+                                <td class="text-muted">@Model.Function.ActionType</td>
+                            </tr>
+                            <tr>
+                                <th class="ps-0" scope="row">Endpoint:</th>
+                                <td class="text-muted">
+                                    <code class="fs-13">@Model.Function.Endpoint</code>
+                                    <button class="btn btn-xs btn-ghost-secondary" onclick="copyToClipboard('@Model.Function.Endpoint')">
+                                        <i class="ri-file-copy-line"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="ps-0" scope="row">Status:</th>
+                                <td>
+                                    @if (Model.Function.IsEnabled)
+                                    {
+                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                    }
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Test Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Tests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table align-middle table-hover">
+                            <thead class="table-light">
+                            <tr>
+                                <th scope="col">Time</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Response Time</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @* @foreach (var test in Model.RecentTests) *@
+                            @* { *@
+                            @* <tr class="test-result" data-test-id="@test.Id"> *@
+                            @*     <td>@test.ExecutedAt.ToString("HH:mm:ss")</td> *@
+                            @*     <td> *@
+                            @*         @if (test.IsSuccess) *@
+                            @*         { *@
+                            @*         <span class="badge bg-success-subtle text-success"> *@
+                            @*                         <i class="ri-checkbox-circle-fill me-1"></i> Success *@
+                            @*                     </span> *@
+                            @*         } *@
+                            @*         else *@
+                            @*         { *@
+                            @*         <span class="badge bg-danger-subtle text-danger"> *@
+                            @*                         <i class="ri-error-warning-fill me-1"></i> Failed *@
+                            @*                     </span> *@
+                            @*         } *@
+                            @*     </td> *@
+                            @*     <td>@test.ExecutionTimeMs ms</td> *@
+                            @* </tr> *@
+                            @* } *@
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @* @if (!Model.RecentTests.Any()) *@
+                    {
+                    <div class="text-center py-3">
+                        <p class="text-muted mb-0">No test results yet.</p>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Console -->
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h5 class="card-title flex-grow-1 mb-0">Test Console</h5>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="btn btn-success btn-sm" id="sendRequest">
+                                <i class="ri-play-circle-line align-middle me-1"></i> Send Request
+                            </button>
+                            <button type="button" class="btn btn-light btn-sm ms-1" id="clearConsole">
+                                <i class="ri-delete-bin-line align-middle me-1"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- Request Payload -->
+                        <div class="col-lg-6">
+                            <label class="form-label">Request Payload (JSON)</label>
+                            <div id="requestEditor" style="height: 400px; border: 1px solid #e9ebec;"></div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-light btn-sm" onclick="formatJson('request')">
+                                    <i class="ri-code-line align-middle me-1"></i> Format JSON
+                                </button>
+                                <button type="button" class="btn btn-light btn-sm" onclick="loadSamplePayload()">
+                                    <i class="ri-file-list-line align-middle me-1"></i> Load Sample
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Response -->
+                        <div class="col-lg-6">
+                            <label class="form-label">Response</label>
+                            <div id="responseEditor" style="height: 400px; border: 1px solid #e9ebec;"></div>
+                            <div class="mt-2 d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <div id="responseStats" class="text-muted" style="display: none;">
+                                        Status: <span id="responseStatus" class="fw-medium"></span> |
+                                        Time: <span id="responseTime" class="fw-medium"></span>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-light btn-sm" onclick="formatJson('response')">
+                                        <i class="ri-code-line align-middle me-1"></i> Format JSON
+                                    </button>
+                                    <button type="button" class="btn btn-light btn-sm" onclick="copyResponse()">
+                                        <i class="ri-file-copy-line align-middle me-1"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+<script>
+    // Initialize editors
+    const requestEditor = ace.edit("requestEditor");
+    requestEditor.setTheme("ace/theme/tomorrow");
+    requestEditor.session.setMode("ace/mode/json");
+    requestEditor.setShowPrintMargin(false);
+
+    const responseEditor = ace.edit("responseEditor");
+    responseEditor.setTheme("ace/theme/tomorrow");
+    responseEditor.session.setMode("ace/mode/json");
+    responseEditor.setShowPrintMargin(false);
+    responseEditor.setReadOnly(true);
+
+    // Load sample payload
+    function loadSamplePayload() {
+        const samplePayload = {
+            actionType: "@Model.Function.ActionType",
+            data: {
+                // Add sample data based on action type
+            }
+        };
+        requestEditor.setValue(JSON.stringify(samplePayload, null, 2));
+    }
+
+    // Format JSON
+    function formatJson(editor) {
+        try {
+            const editorInstance = editor === 'request' ? requestEditor : responseEditor;
+            const json = JSON.parse(editorInstance.getValue());
+            editorInstance.setValue(JSON.stringify(json, null, 2));
+        } catch (e) {
+            // Could show error toast
+            console.error('Invalid JSON');
+        }
+    }
+
+    // Copy response
+    function copyResponse() {
+        navigator.clipboard.writeText(responseEditor.getValue());
+    }
+
+    // Send request
+    document.getElementById('sendRequest').addEventListener('click', async () => {
+        try {
+            const startTime = performance.now();
+            const payload = JSON.parse(requestEditor.getValue());
+
+            // Update UI
+            document.getElementById('sendRequest').disabled = true;
+            responseEditor.setValue('Sending request...');
+            document.getElementById('responseStats').style.display = 'none';
+
+            // Send request
+            const response = await fetch('/api/games/@Model.GameId/functions/@Model.Function.Id/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const endTime = performance.now();
+            const responseTime = Math.round(endTime - startTime);
+
+            // Update response
+            const responseData = await response.json();
+            responseEditor.setValue(JSON.stringify(responseData, null, 2));
+
+            // Update stats
+            document.getElementById('responseStatus').textContent = response.ok ? 'Success' : 'Error';
+            document.getElementById('responseStatus').className = response.ok ? 'text-success' : 'text-danger';
+            document.getElementById('responseTime').textContent = responseTime + 'ms';
+            document.getElementById('responseStats').style.display = 'block';
+
+            // Add to recent tests
+            if (response.ok) {
+                await refreshRecentTests();
+            }
+        } catch (error) {
+            responseEditor.setValue('Error: ' + error.message);
+        } finally {
+            document.getElementById('sendRequest').disabled = false;
+        }
+    });
+
+    // Clear console
+    document.getElementById('clearConsole').addEventListener('click', () => {
+        requestEditor.setValue('');
+        responseEditor.setValue('');
+        document.getElementById('responseStats').style.display = 'none';
+    });
+
+    // Refresh recent tests
+    async function refreshRecentTests() {
+        try {
+            const response = await fetch(window.location.href);
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newTests = doc.querySelector('.table-responsive');
+            document.querySelector('.table-responsive').innerHTML = newTests.innerHTML;
+        } catch (error) {
+            console.error('Error refreshing tests:', error);
+        }
+    }
+
+    // View test details
+    document.querySelectorAll('.test-result').forEach(row => {
+        row.addEventListener('click', async () => {
+            try {
+                const testId = row.dataset.testId;
+                const response = await fetch(`/api/games/@Model.GameId/functions/@Model.Function.Id/tests/${testId}`);
+                const test = await response.json();
+
+                requestEditor.setValue(JSON.stringify(test.request, null, 2));
+                responseEditor.setValue(JSON.stringify(test.response, null, 2));
+
+                document.getElementById('responseStatus').textContent = test.isSuccess ? 'Success' : 'Error';
+                document.getElementById('responseStatus').className = test.isSuccess ? 'text-success' : 'text-danger';
+                document.getElementById('responseTime').textContent = test.executionTimeMs + 'ms';
+                document.getElementById('responseStats').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading test:', error);
+            }
+        });
+    });
+
+    // Load initial sample payload
+    loadSamplePayload();
+</script>
+}

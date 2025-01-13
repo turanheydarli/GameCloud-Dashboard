@@ -1,4 +1,455 @@
 @page "/game/{gameId:guid}/functions"
-
 @model GameFunctionsModel
 
+@{
+    Layout = "_GameLayout";
+}
+@Html.AntiForgeryToken()
+<div class="container-fluid">
+<!-- Page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+            <h4 class="mb-sm-0">Cloud Functions</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item">
+                        <a href="/games">Games</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="/game/@Model.GameId">@Model.Game.Name</a>
+                    </li>
+                    <li class="breadcrumb-item active">Functions</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Total Executions (24h)</h6>
+                        @* <h2 class="mb-0">@Model.Stats.TotalExecutions24h</h2> *@
+                        <h2 class="mb-0">100</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                            <i class="ri-pulse-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Success Rate (24h)</h6>
+                        @* <h2 class="mb-0">@Model.Stats.SuccessRate24h.ToString("0.00")%</h2> *@
+                        <h2 class="mb-0">100%</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-success-subtle text-success rounded fs-3">
+                            <i class="ri-check-double-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Avg Response Time</h6>
+                        @* <h2 class="mb-0">@Model.Stats.AvgResponseTime.TotalMilliseconds.ToString("0")ms</h2> *@
+                        <h2 class="mb-0">1ms</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-warning-subtle text-warning rounded fs-3">
+                            <i class="ri-time-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Active Functions</h6>
+                        @* <h2 class="mb-0">@Model.Stats.ActiveFunctionCount</h2> *@
+                        <h2 class="mb-0">0</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-info-subtle text-info rounded fs-3">
+                            <i class="ri-function-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons Row -->
+<div class="row mb-4">
+    <div class="col-sm">
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#functionModal">
+                <i class="ri-add-line align-bottom me-1"></i> Register Function
+            </button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="ri-equalizer-line align-bottom me-1"></i> Filter
+                </button>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#"><input type="checkbox" class="me-2"> Show Disabled</a>
+                    <a class="dropdown-item" href="#"><input type="checkbox" class="me-2"> Show Errors Only</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Clear Filters</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-auto">
+        <div class="d-flex gap-2">
+            <div class="search-box">
+                <form method="get" class="d-flex gap-2">
+                    <input type="text" class="form-control" name="search" value="@Model.Search"
+                           placeholder="Search functions...">
+                    <input type="hidden" name="pageSize" value="@Model.PageSize"/>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ri-search-line"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Functions Table Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+                <h5 class="card-title mb-0">Registered Functions</h5>
+            </div>
+            <div class="flex-shrink-0">
+                <button class="btn btn-sm btn-soft-primary me-2" id="refreshTable">
+                    <i class="ri-refresh-line"></i>
+                </button>
+                <select class="form-select form-select-sm" onchange="updatePageSize(this.value)">
+                    <option value="10" selected="@(Model.PageSize == 10)">10 per page</option>
+                    <option value="25" selected="@(Model.PageSize == 25)">25 per page</option>
+                    <option value="50" selected="@(Model.PageSize == 50)">50 per page</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th scope="col">Function</th>
+                    <th scope="col">Performance (24h)</th>
+                    <th scope="col">Last Execution</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var function in Model.Functions.Items)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar-sm">
+                                        <div class="avatar-title bg-primary-subtle text-primary rounded">
+                                            <i class="ri-function-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h5 class="fs-14 mb-1">
+                                        @function.Name
+                                        <span class="badge bg-secondary-subtle text-secondary ms-2">@function.ActionType</span>
+                                    </h5>
+                                    <p class="text-muted mb-0">
+                                        <code class="fs-12">@function.Endpoint</code>
+                                        <button class="btn btn-xs btn-ghost-secondary" onclick="copyToClipboard('@function.Endpoint')">
+                                            <i class="ri-file-copy-line"></i>
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <small class="text-muted mb-1">
+                                    @* Success Rate: <span class="fw-medium">@(function.Stats?.SuccessRate.ToString("0.00"))%</span> *@
+                                    Success Rate: <span class="fw-medium">100%</span>
+                                </small>
+                                <small class="text-muted mb-1">
+                                    @* Avg Time: <span class="fw-medium">@(function.Stats?.AvgResponseTime.TotalMilliseconds.ToString("0"))ms</span> *@
+                                    Avg Time: <span class="fw-medium">5ms</span>
+                                </small>
+                                <small class="text-muted">
+                                    @* Calls: <span class="fw-medium">@(function.Stats?.TotalCalls ?? 0)</span> *@
+                                    Calls: <span class="fw-medium">10</span>
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            @* @if (function.LastExecutedAt.HasValue) *@
+                            @* { *@
+                            @*     <small class="text-muted">@function.LastExecutedAt.Value.ToString("MMM dd, HH:mm")</small> *@
+                            @*     @if (!string.IsNullOrEmpty(function.LastErrorMessage)) *@
+                            @*     { *@
+                            @*         <div class="mt-1"> *@
+                            @*             <span class="badge bg-danger-subtle text-danger" data-bs-toggle="tooltip" *@
+                            @*                   title="@function.LastErrorMessage"> *@
+                            @*                 <i class="ri-error-warning-line me-1"></i> Error *@
+                            @*             </span> *@
+                            @*         </div> *@
+                            @*     } *@
+                            @* } *@
+                            else
+                            {
+                            <span class="text-muted">Never executed</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" @(function.IsEnabled ? "checked" : "")
+                                       onchange="toggleFunction('@function.Id', this.checked)">
+                                <label class="form-check-label">@(function.IsEnabled ? "Active" : "Inactive")</label>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="ri-more-fill align-middle"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="/game/@Model.GameId/functions/@function.Id/logs">
+                                            <i class="ri-history-line align-bottom me-2 text-muted"></i>
+                                            View History
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/game/@Model.GameId/functions/@function.Id/test">
+                                            <i class="ri-bug-line align-bottom me-2 text-muted"></i>
+                                            Test Function
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item edit-function" href="#"
+                                           data-function-id="@function.Id"
+                                           data-function-name="@function.Name"
+                                           data-function-action-type="@function.ActionType"
+                                           data-function-endpoint="@function.Endpoint">
+                                            <i class="ri-pencil-line align-bottom me-2 text-muted"></i>
+                                            Edit
+                                        </a>
+                                    </li>
+                                    <li class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger delete-function" href="#"
+                                           data-function-id="@function.Id"
+                                           data-function-name="@function.Name">
+                                            <i class="ri-delete-bin-line align-bottom me-2"></i>
+                                            Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty State -->
+        @if (!Model.Functions.Items.Any())
+        {
+            <div class="text-center py-5">
+                <div class="avatar-lg mx-auto mb-4">
+                    <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                        <i class="ri-function-line"></i>
+                    </div>
+                </div>
+                <h5>No Functions Found</h5>
+                <p class="text-muted">Get started by registering your first cloud function.</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#functionModal">
+                    <i class="ri-add-line align-bottom me-1"></i> Register Function
+                </button>
+            </div>
+        }
+
+
+    </div>
+</div>
+</div>
+
+
+<!-- Pagination -->
+@if (Model.Functions.Items.Any())
+{
+    <div class="row align-items-center mt-4">
+        <div class="col-sm text-muted">
+            Showing @((Model.Functions.Index * Model.Functions.Size) + 1) to
+            @Math.Min((Model.Functions.Index + 1) * Model.Functions.Size, Model.Functions.Count)
+            of @Model.Functions.Count functions
+        </div>
+        <div class="col-sm-auto">
+            <ul class="pagination mb-0">
+                <li class="page-item @(!Model.Functions.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" href="@Model.GetPageUrl(Model.Functions.Index - 1)">
+                        <i class="ri-arrow-left-s-line"></i>
+                    </a>
+                </li>
+                @for (int i = 0; i < Model.Functions.Pages; i++)
+                {
+                    <li class="page-item @(Model.Functions.Index == i ? "active" : "")">
+                        <a class="page-link" href="@Model.GetPageUrl(i)">@(i + 1)</a>
+                    </li>
+                }
+                <li class="page-item @(!Model.Functions.HasNextPage ? "disabled" : "")">
+                    <a class="page-link" href="@Model.GetPageUrl(Model.Functions.Index + 1)">
+                        <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+}
+
+<!-- Function Modal -->
+<div class="modal fade" id="functionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form id="functionForm" asp-page-handler="Post" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="functionModalTitle">Register Function</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="functionId" name="Id"/>
+                    <input type="hidden" name="GameId" value="@Model.GameId"/>
+
+                    <!-- Basic Info -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Function Name</label>
+                                <input type="text" class="form-control" name="Name" required
+                                       placeholder="e.g., ProcessMove">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Action Type</label>
+                                <input type="text" class="form-control" name="ActionType" required
+                                       placeholder="e.g., PROCESS_MOVE">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="Description" rows="2"
+                                  placeholder="Brief description of function purpose"></textarea>
+                    </div>
+
+                    <!-- Endpoint URL -->
+                    <div class="mb-3">
+                        <label class="form-label">Endpoint URL</label>
+                        <input type="url" class="form-control" name="Endpoint" required
+                               placeholder="https://api.example.com/game-functions/process-move">
+                        <div class="form-text">HTTPS endpoint that will handle function calls</div>
+                    </div>
+
+                    <!-- Timeout & Retries -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Timeout (seconds)</label>
+                                <input type="number" class="form-control" name="TimeoutSeconds"
+                                       min="1" max="300" value="30"
+                                       placeholder="Function timeout in seconds">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Max Retries</label>
+                                <input type="number" class="form-control" name="MaxRetries"
+                                       min="0" max="5" value="3"
+                                       placeholder="Maximum retry attempts">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Headers -->
+                    <div class="mb-3">
+                        <label class="form-label">Custom Headers</label>
+                        <div id="headersContainer">
+                            <!-- Headers will be dynamically added here -->
+                        </div>
+                        <button type="button" class="btn btn-soft-primary btn-sm mt-2" onclick="addHeaderRow()">
+                            <i class="ri-add-line align-bottom"></i> Add Header
+                        </button>
+                    </div>
+
+                    <!-- Enable/Disable Toggle -->
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="IsEnabled" checked>
+                            <label class="form-check-label">Enable Function</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ri-save-line align-bottom me-1"></i>
+                        <span id="submitButtonText">Register Function</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Template for header row -->
+<template id="headerRowTemplate">
+    <div class="input-group mb-2">
+        <input type="text" class="form-control" name="Headers[].Key"
+               placeholder="Header Name" pattern="[A-Za-z0-9-]+"
+               title="Alphanumeric and hyphens only">
+        <input type="text" class="form-control" name="Headers[].Value"
+               placeholder="Header Value">
+        <button type="button" class="btn btn-outline-danger" onclick="removeHeaderRow(this)">
+            <i class="ri-delete-bin-line"></i>
+        </button>
+    </div>
+</template>
+
+@section Scripts {
+    <script src="~/js/gameFunctions.js"></script>
+}

@@ -3,11 +3,18 @@ using GameCloud.Dashboard.Extensions;
 using GameCloud.Dashboard.Filters;
 using GameCloud.Dashboard.Security;
 using Microsoft.Extensions.Caching.Memory;
+using NToastNotify;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorPages().AddMvcOptions(options => { options.Filters.Add<ApiExceptionHandlerFilter>(); })
-    .AddRazorRuntimeCompilation();
+builder.Services.AddRazorPages()
+    .AddMvcOptions(options => { options.Filters.Add<ApiExceptionHandlerFilter>(); })
+    .AddRazorRuntimeCompilation()
+    .AddNToastNotifyToastr(new ToastrOptions()
+    {
+        ProgressBar = false,
+        PositionClass = ToastPositions.BottomRight
+    });
 
 
 builder.Services.AddAuthentication(options =>
@@ -61,6 +68,9 @@ builder.Services.AddRefitClient<IDeveloperClient>(builder.Configuration["ApiUrl:
 builder.Services.AddRefitClient<IGameClient>(builder.Configuration["ApiUrl:GameCloud"] ??
                                              throw new ArgumentNullException());
 
+builder.Services.AddRefitClient<IImagesClient>(builder.Configuration["ApiUrl:GameCloud"] ??
+                                               throw new ArgumentNullException());
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -74,6 +84,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseNToastNotify();
 
 app.UseSession();
 

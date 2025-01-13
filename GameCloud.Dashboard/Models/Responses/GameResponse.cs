@@ -6,6 +6,7 @@ public record GameResponse(
     string Description,
     string ImageUrl,
     Guid DeveloperId,
+    Guid ImageId,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

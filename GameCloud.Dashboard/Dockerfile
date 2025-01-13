@@ -1,22 +1,27 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+﻿# Stage 1: Base runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8081
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+# Stage 2: Build environment
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["GC.Dashboard/GC.Dashboard.csproj", "GC.Dashboard/"]
-RUN dotnet restore "GC.Dashboard/GC.Dashboard.csproj"
-COPY . .
-WORKDIR "/src/GC.Dashboard"
-RUN dotnet build "GC.Dashboard.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
+COPY ["GameCloud.Dashboard/GameCloud.Dashboard.csproj", "GameCloud.Dashboard/"]
+RUN dotnet restore "GameCloud.Dashboard/GameCloud.Dashboard.csproj"
+COPY . .
+
+WORKDIR "/src/GameCloud.Dashboard"
+RUN dotnet build "GameCloud.Dashboard.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+# Stage 3: Publish artifacts
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "GC.Dashboard.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "GameCloud.Dashboard.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
+# Stage 4: Final runtime image
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "GC.Dashboard.dll"]
+ENTRYPOINT ["dotnet", "GameCloud.Dashboard.dll"]

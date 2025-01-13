@@ -1,0 +1,457 @@
+@page "/game/{gameId:guid}/functions/{functionId:guid}/logs"
+@model FunctionLogsModel
+
+@{
+    Layout = "_GameLayout";
+}
+
+<div class="container-fluid">
+<!-- Page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+            <h4 class="mb-sm-0">Function Logs: @Model.Function.Name</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item">
+                        <a href="/games">Games</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="/game/@Model.GameId">@Model.Game.Name</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="/game/@Model.GameId/functions">Functions</a>
+                    </li>
+                    <li class="breadcrumb-item active">Execution History</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Stats -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" id="filterForm">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Time Range</label>
+                            <select class="form-select" name="timeRange" onchange="this.form.submit()">
+                                <option value="1h" selected="@(Model.TimeRange == "1h")">Last Hour</option>
+                                <option value="24h" selected="@(Model.TimeRange == "24h")">Last 24 Hours</option>
+                                <option value="7d" selected="@(Model.TimeRange == "7d")">Last 7 Days</option>
+                                <option value="30d" selected="@(Model.TimeRange == "30d")">Last 30 Days</option>
+                                <option value="custom" selected="@(Model.TimeRange == "custom")">Custom Range</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4" id="customDateRange" style="display: none;">
+                            <label class="form-label">Custom Date Range</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="dateRange" id="dateRangePicker"
+                                       value="@Model.DateRange" placeholder="Select date range">
+                                <button class="btn btn-light" type="button" id="dateRangeBtn">
+                                    <i class="ri-calendar-2-line"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status" onchange="this.form.submit()">
+                                <option value="">All</option>
+                                <option value="success" selected="@(Model.Status == "success")">Success</option>
+                                <option value="error" selected="@(Model.Status == "error")">Error</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Search</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="search" value="@Model.Search"
+                                       placeholder="Search in payload...">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="ri-search-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Quick Stats -->
+                <div class="row mt-4">
+                    <div class="col">
+                        <div class="d-flex align-items-center gap-4">
+                            <div>
+                                <h4 class="mb-0">@Model.LogStats.TotalExecutions</h4>
+                                <small class="text-muted">Total Executions</small>
+                            </div>
+                            <div class="vr"></div>
+                            <div>
+                                <h4 class="mb-0 text-success">@Model.LogStats.SuccessCount</h4>
+                                <small class="text-muted">Successful</small>
+                            </div>
+                            <div class="vr"></div>
+                            <div>
+                                <h4 class="mb-0 text-danger">@Model.LogStats.ErrorCount</h4>
+                                <small class="text-muted">Failed</small>
+                            </div>
+                            <div class="vr"></div>
+                            <div>
+                                <h4 class="mb-0">@Model.LogStats.AvgResponseTime.TotalMilliseconds.ToString("0")ms</h4>
+                                <small class="text-muted">Avg Response Time</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-soft-primary" id="refreshLogs">
+                            <i class="ri-refresh-line align-bottom"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs Table -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle table-nowrap mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th scope="col">Timestamp</th>
+                            <th scope="col">Session</th>
+                            <th scope="col">User</th>
+                            <th scope="col">Response Time</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var log in Model.Logs.Items)
+                        {
+                            <tr>
+                                <td>@log.ExecutedAt.ToString("MMM dd, yyyy HH:mm:ss")</td>
+                                <td>
+                                    <code class="fs-12">@log.SessionId</code>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(log.UserName))
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-xs">
+                                                <div class="avatar-title rounded-circle bg-primary-subtle text-primary">
+                                                    @log.UserName[0]
+                                                </div>
+                                            </div>
+                                            <div>@log.UserName</div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>@log.ExecutionTimeMs ms</td>
+                                <td>
+                                    @if (log.IsSuccess)
+                                    {
+                                        <span class="badge bg-success-subtle text-success">
+                                            <i class="ri-checkbox-circle-line align-middle me-1"></i> Success
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger" data-bs-toggle="tooltip"
+                                              title="@log.ErrorMessage">
+                                            <i class="ri-error-warning-line align-middle me-1"></i> Error
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-soft-info me-1 view-details"
+                                            data-log-id="@log.Id" title="View Details">
+                                        <i class="ri-eye-fill"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-soft-primary retry-execution"
+                                            data-log-id="@log.Id" title="Retry Execution">
+                                        <i class="ri-refresh-line"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model.Logs.Items.Any())
+                {
+                    <div class="text-center py-5">
+                        <div class="avatar-lg mx-auto mb-4">
+                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                                <i class="ri-file-history-line"></i>
+                            </div>
+                        </div>
+                        <h5>No Execution Logs Found</h5>
+                        <p class="text-muted">Try adjusting your filters or test the function to generate logs.</p>
+                        <a href="/game/@Model.GameId/functions/@Model.FunctionId/test" class="btn btn-primary">
+                            <i class="ri-bug-line align-bottom me-1"></i> Test Function
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <!-- Pagination -->
+                    <div class="row align-items-center mt-4">
+                        <div class="col">
+                            <div class="text-muted">
+                                Showing @((Model.Logs.Index * Model.Logs.Size) + 1) to
+                                @Math.Min((Model.Logs.Index + 1) * Model.Logs.Size, Model.Logs.Count)
+                                of @Model.Logs.Count logs
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <ul class="pagination mb-0">
+                                <li class="page-item @(!Model.Logs.HasPreviousPage ? "disabled" : "")">
+                                    <a class="page-link" href="@Model.GetPageUrl(Model.Logs.Index - 1)">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+                                @for (int i = 0; i < Model.Logs.Pages; i++)
+                                {
+                                    <li class="page-item @(Model.Logs.Index == i ? "active" : "")">
+                                        <a class="page-link" href="@Model.GetPageUrl(i)">@(i + 1)</a>
+                                    </li>
+                                }
+                                <li class="page-item @(!Model.Logs.HasNextPage ? "disabled" : "")">
+                                    <a class="page-link" href="@Model.GetPageUrl(Model.Logs.Index + 1)">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Log Details Modal -->
+<div class="modal fade" id="logDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Execution Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Session ID:</dt>
+                                <dd class="col-sm-8" id="detailSessionId"></dd>
+
+                                <dt class="col-sm-4">User:</dt>
+                                <dd class="col-sm-8" id="detailUser"></dd>
+
+                                <dt class="col-sm-4">IP Address:</dt>
+                                <dd class="col-sm-8" id="detailIpAddress"></dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Timestamp:</dt>
+                                <dd class="col-sm-8" id="detailTimestamp"></dd>
+
+                                <dt class="col-sm-4">Duration:</dt>
+                                <dd class="col-sm-8" id="detailDuration"></dd>
+
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8" id="detailStatus"></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <label class="form-label">Request Payload</label>
+                        <div id="requestViewer" style="height: 300px; border: 1px solid #e9ebec;"></div>
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label">Response</label>
+                        <div id="responseViewer" style="height: 300px; border: 1px solid #e9ebec;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="retryButton">
+                    <i class="ri-refresh-line align-bottom me-1"></i> Retry Execution
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script>
+        // Initialize date range picker
+        const picker = new Litepicker({
+            element: document.getElementById('dateRangePicker'),
+            buttonText: {
+                previousMonth: `<i class="ri-arrow-left-s-line"></i>`,
+                nextMonth: `<i class="ri-arrow-right-s-line"></i>`,
+            },
+            singleMode: false,
+            numberOfMonths: 2,
+            numberOfColumns: 2,
+            startDate: moment().subtract(7, 'days').toDate(),
+            endDate: moment().toDate(),
+            onSelect: (date1, date2) => {
+                document.getElementById('filterForm').submit();
+            }
+        });
+
+        // Handle time range changes
+        document.querySelector('select[name="timeRange"]').addEventListener('change', function() {
+            const customRangeDiv = document.getElementById('customDateRange');
+            customRangeDiv.style.display = this.value === 'custom' ? 'block' : 'none';
+            if (this.value !== 'custom') {
+                document.getElementById('filterForm').submit();
+            }
+        });
+
+        // Initialize JSON viewers
+        const requestViewer = ace.edit("requestViewer");
+        requestViewer.setTheme("ace/theme/tomorrow");
+        requestViewer.session.setMode("ace/mode/json");
+        requestViewer.setReadOnly(true);
+        requestViewer.setShowPrintMargin(false);
+
+        const responseViewer = ace.edit("responseViewer");
+        responseViewer.setTheme("ace/theme/tomorrow");
+        responseViewer.session.setMode("ace/mode/json");
+        responseViewer.setReadOnly(true);
+        responseViewer.setShowPrintMargin(false);
+
+        // View log details
+        document.querySelectorAll('.view-details').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const logId = btn.dataset.logId;
+                try {
+                    const response = await fetch(`/api/games/@Model.GameId/functions/@Model.FunctionId/logs/${logId}`);
+                    const log = await response.json();
+                    
+                    // Update modal content
+                    document.getElementById('detailSessionId').textContent = log.sessionId;
+                    document.getElementById('detailUser').textContent = log.userName || '-';
+                    document.getElementById('detailIpAddress').textContent = log.ipAddress || '-';
+                    document.getElementById('detailTimestamp').textContent = moment(log.executedAt).format('MMM DD, YYYY HH:mm:ss');
+                    document.getElementById('detailDuration').textContent = `${log.executionTimeMs}ms`;
+                    
+                    const statusEl = document.getElementById('detailStatus');
+                    if (log.isSuccess) {
+                        statusEl.innerHTML = '<span class="badge bg-success-subtle text-success">Success</span>';
+                    } else {
+                        statusEl.innerHTML = `<span class="badge bg-danger-subtle text-danger" title="${log.errorMessage}">Error</span>`;
+                    }
+
+                    // Update JSON viewers
+                    requestViewer.setValue(JSON.stringify(log.payload, null, 2));
+                    responseViewer.setValue(JSON.stringify(log.result, null, 2));
+
+                    // Store log ID for retry button
+                    document.getElementById('retryButton').dataset.logId = logId;
+
+                    // Show modal
+                    new bootstrap.Modal(document.getElementById('logDetailsModal')).show();
+                } catch (error) {
+                    console.error('Error loading log details:', error);
+                    // Could show error toast here
+                }
+            });
+        });
+
+        // Retry execution
+        async function retryExecution(logId) {
+            try {
+                const response = await fetch(`/api/games/@Model.GameId/functions/@Model.FunctionId/logs/${logId}/retry`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) throw new Error('Failed to retry execution');
+
+                // Refresh page to show new execution
+                window.location.reload();
+            } catch (error) {
+                console.error('Error retrying execution:', error);
+                // Could show error toast here
+            }
+        }
+
+        // Retry buttons
+        document.querySelectorAll('.retry-execution').forEach(btn => {
+            btn.addEventListener('click', () => retryExecution(btn.dataset.logId));
+        });
+
+        document.getElementById('retryButton').addEventListener('click', function() {
+            retryExecution(this.dataset.logId);
+        });
+
+        // Auto-refresh
+        const refreshInterval = 30000; // 30 seconds
+        let refreshTimer = setInterval(refreshLogs, refreshInterval);
+
+        async function refreshLogs() {
+            try {
+                const response = await fetch(window.location.href);
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Update table content
+                const newTable = doc.querySelector('.table-responsive');
+                document.querySelector('.table-responsive').innerHTML = newTable.innerHTML;
+                
+                // Update stats
+                const newStats = doc.querySelector('.d-flex.align-items-center.gap-4');
+                document.querySelector('.d-flex.align-items-center.gap-4').innerHTML = newStats.innerHTML;
+                
+                // Reinitialize tooltips
+                initTooltips();
+            } catch (error) {
+                console.error('Error refreshing logs:', error);
+            }
+        }
+
+        // Manual refresh button
+        document.getElementById('refreshLogs').addEventListener('click', () => {
+            refreshLogs();
+            // Reset interval timer
+            clearInterval(refreshTimer);
+            refreshTimer = setInterval(refreshLogs, refreshInterval);
+        });
+
+        // Initialize tooltips
+        function initTooltips() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+        
+        initTooltips();
+    </script>
+}

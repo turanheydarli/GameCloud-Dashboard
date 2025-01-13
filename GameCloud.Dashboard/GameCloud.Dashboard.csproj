@@ -9,14 +9,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.11" />
       <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.3.0" />
+      <PackageReference Include="NToastNotify" Version="8.0.0" />
       <PackageReference Include="Refit" Version="8.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.0" />
@@ -33,6 +28,12 @@
 
     <ItemGroup>
       <_ContentIncludedByDefault Remove="Views\Shared\Components\PageHeader\Default.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 
 </Project>

@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Refit;
 using System.Text.Json;
+using NToastNotify;
 using ProblemDetails = Microsoft.AspNetCore.Mvc.ProblemDetails;
 
 namespace GameCloud.Dashboard.Filters;
 
-public class ApiExceptionHandlerFilter : IExceptionFilter
+public class ApiExceptionHandlerFilter(IToastNotification toastNotification) : IExceptionFilter
 {
     public void OnException(ExceptionContext context)
     {
@@ -80,6 +81,8 @@ public class ApiExceptionHandlerFilter : IExceptionFilter
     private void HandleProblemDetails(ExceptionContext context, ProblemDetails problemDetails,
         System.Net.HttpStatusCode statusCode)
     {
+        toastNotification.AddErrorToastMessage(problemDetails.Detail);
+        
         if (!string.IsNullOrEmpty(problemDetails.Detail))
         {
             context.ModelState.AddModelError(string.Empty, problemDetails.Detail);

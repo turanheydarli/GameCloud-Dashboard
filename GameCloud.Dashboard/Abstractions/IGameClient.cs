@@ -41,7 +41,7 @@ public interface IGameClient
     #region Game Images
 
     [Multipart]
-    [Post("/api/v1/games/{gameId}/images")]
+    [Post("/api/v1/games/{gameId}/icon")]
     Task<ImageResponse> SetImageAsync(Guid gameId, StreamPart image);
 
     [Get("/api/v1/games/{gameId}/images")]
@@ -53,6 +53,9 @@ public interface IGameClient
 
     [Post("/api/v1/games/{gameId}/functions")]
     Task<FunctionResponse> CreateFunctionAsync(Guid gameId, [Body] FunctionRequest request);
+
+    [Get("/api/v1/games/{gameId}/functions/{functionId}")]
+    Task<FunctionResponse> GetFunctionAsync(Guid gameId, Guid functionId);
 
     [Get("/api/v1/games/{gameId}/functions")]
     Task<PageableListResponse<FunctionResponse>> GetFunctionsAsync(Guid gameId, [Query] PageableRequest request);

@@ -44,6 +44,8 @@
 @await Component.InvokeAsync("PageHeader", config)
 
 <body>
+@await Component.InvokeAsync("NToastNotify")
+
 <div id="layout-wrapper">
     @await Component.InvokeAsync("AppHeader", config)
 
