@@ -27,6 +27,7 @@ public class JwtAuthenticationHandler : AuthenticationHandler<JwtAuthenticationO
         UrlEncoder encoder,
         ISystemClock clock,
         JwtTokenHandler tokenHandler
+        
     )
         : base(options, logger, encoder, clock)
     {
