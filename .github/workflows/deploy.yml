@@ -22,5 +22,5 @@ jobs:
       
       - name: Build and push
         run: |
-          docker build ./GameCloud.Dashboard/Dockerfile -t ${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }} .
+          docker build -t ${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }} -f ./GameCloud.Dashboard/Dockerfile .
           docker push ${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}
