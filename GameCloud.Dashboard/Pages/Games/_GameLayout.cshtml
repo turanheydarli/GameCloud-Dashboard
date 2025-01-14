@@ -30,6 +30,7 @@
     };
 
     var gameId = Context.Request.RouteValues["gameId"];
+    var gameName = ViewData["gameName"] ?? "Dashboard";
 }
 
 <!DOCTYPE html>
@@ -59,23 +60,30 @@
                 <div id="two-column-menu"></div>
                 <ul class="navbar-nav" id="navbar-nav">
                     <li class="menu-title">
-                        <i class="ri-more-fill"></i> <span data-key="t-components">Game Management</span>
+                        <i class="ri-game-line"></i> <span data-key="t-game">@gameName</span>
                     </li>
 
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="/game/@gameId">
-                            <i class="ri-dashboard-line"></i> <span data-key="t-dashboards">Overview</span>
+                            <i class="ri-dashboard-2-line"></i> <span data-key="t-overview">Overview</span>
                         </a>
+                    </li>
+
+                    <li class="menu-title">
+                        <span data-key="t-development">Development</span>
                     </li>
 
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="#sidebarKeys" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarKeys">
-                            <i class="ri-key-line"></i> <span data-key="t-keys">Keys</span>
+                            <i class="ri-key-2-line"></i> <span data-key="t-keys">API Keys</span>
                         </a>
                         <div class="collapse menu-dropdown" id="sidebarKeys">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="/game/@gameId/keys#sidebarKeys" class="nav-link" data-key="t-key-list">Key List</a>
+                                    <a href="/game/@gameId/keys" class="nav-link" data-key="t-key-list">Key List</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/keys/create" class="nav-link" data-key="t-create-key">Create Key</a>
                                 </li>
                             </ul>
                         </div>
@@ -88,29 +96,20 @@
                         <div class="collapse menu-dropdown" id="sidebarFunctions">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="/game/@gameId/functions#sidebarFunctions" class="nav-link" data-key="t-function-list">Function List</a>
+                                    <a href="/game/@gameId/functions" class="nav-link" data-key="t-function-list">Function List</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/game/@gameId/functions/create#sidebarFunctions" class="nav-link" data-key="t-create-function">Create Function</a>
+                                    <a href="/game/@gameId/functions/create" class="nav-link" data-key="t-create-function">Create Function</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/functions/logs" class="nav-link" data-key="t-function-logs">Function Logs</a>
                                 </li>
                             </ul>
                         </div>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link menu-link" href="#sidebarLogs" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarLogs">
-                            <i class="ri-file-list-3-line"></i> <span data-key="t-logs">Logs</span>
-                        </a>
-                        <div class="collapse menu-dropdown" id="sidebarLogs">
-                            <ul class="nav nav-sm flex-column">
-                                <li class="nav-item">
-                                    <a href="/game/@gameId/logs" class="nav-link" data-key="t-log-list">Log List</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/game/@gameId/logs/errors" class="nav-link" data-key="t-error-logs">Error Logs</a>
-                                </li>
-                            </ul>
-                        </div>
+                    <li class="menu-title">
+                        <span data-key="t-game-services">Game Services</span>
                     </li>
 
                     <li class="nav-item">
@@ -126,10 +125,75 @@
                                     <a href="/game/@gameId/players/groups" class="nav-link" data-key="t-player-groups">Player Groups</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/game/@gameId/players/bans" class="nav-link" data-key="t-player-bans">Player Bans</a>
+                                    <a href="/game/@gameId/players/bans" class="nav-link" data-key="t-player-bans">Bans & Reports</a>
                                 </li>
                             </ul>
                         </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#sidebarMultiplayer" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarMultiplayer">
+                            <i class="ri-team-line"></i> <span data-key="t-multiplayer">Multiplayer</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarMultiplayer">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/leaderboards" class="nav-link" data-key="t-leaderboards">Leaderboards</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/matches" class="nav-link" data-key="t-matches">Matches</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/tournaments" class="nav-link" data-key="t-tournaments">Tournaments</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="menu-title">
+                        <span data-key="t-monitoring">Monitoring</span>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#sidebarAnalytics" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAnalytics">
+                            <i class="ri-line-chart-line"></i> <span data-key="t-analytics">Analytics</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarAnalytics">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/analytics/players" class="nav-link" data-key="t-player-analytics">Player Analytics</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/analytics/performance" class="nav-link" data-key="t-performance">Performance</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#sidebarLogs" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarLogs">
+                            <i class="ri-file-list-3-line"></i> <span data-key="t-logs">Logs</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarLogs">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/logs" class="nav-link" data-key="t-activity-logs">Activity Logs</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/game/@gameId/logs/errors" class="nav-link" data-key="t-error-logs">Error Logs</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="menu-title">
+                        <span data-key="t-settings">Settings</span>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="/game/@gameId/settings">
+                            <i class="ri-settings-4-line"></i> <span data-key="t-game-settings">Game Settings</span>
+                        </a>
                     </li>
                 </ul>
             </div>

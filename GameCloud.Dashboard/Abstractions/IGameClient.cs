@@ -19,7 +19,8 @@ public interface IGameClient
 
     [Put("/api/v1/games/{gameId}")]
     Task<GameResponse> UpdateAsync(Guid gameId, [Body] GameRequest request);
-
+    [Get("/api/v1/games/{gameId}/details")]
+    Task<GameDetailResponse> GetGameDetailsAsync(Guid gameId);
     [Delete("/api/v1/games/{gameId}")]
     Task DeleteAsync(Guid gameId);
 

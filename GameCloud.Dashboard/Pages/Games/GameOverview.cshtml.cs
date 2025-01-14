@@ -8,12 +8,11 @@ namespace GameCloud.Dashboard.Pages.Games;
 
 public class GameOverviewModel(IGameClient gameClient) : PageModel
 {
-    public GameResponse Game { get; set; }
-    public PageableListResponse<GameKeyResponse> Keys { get; set; }
+    public GameDetailResponse Game { get; set; }
 
-    public async Task OnGetAsync([FromRoute] Guid gameId)
+    public async Task<IActionResult> OnGetAsync(Guid gameId)
     {
-        Game = await gameClient.GetAsync(gameId);
-        Keys = await gameClient.GetKeysAsync(gameId, new PageableRequest());
+        Game = await gameClient.GetGameDetailsAsync(gameId);
+        return Page();
     }
 }

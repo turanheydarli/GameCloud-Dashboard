@@ -3,126 +3,112 @@
     </div>
     <ul class="navbar-nav" id="navbar-nav">
         <li class="menu-title">
-            <span data-key="t-menu">Menu</span>
+            <span data-key="t-platform">Platform</span>
         </li>
+
+        <li class="nav-item">
+            <a class="nav-link menu-link" href="/">
+                <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboard">Dashboard</span>
+            </a>
+        </li>
+
         <li class="nav-item">
             <a class="nav-link menu-link" href="#sidebarGames" data-bs-toggle="collapse" role="button"
                aria-expanded="false" aria-controls="sidebarGames">
-                <i class="ri-game-line"></i> <span data-key="t-games">Games</span>
+                <i class="ri-gamepad-line"></i> <span data-key="t-games">Games</span>
             </a>
             <div class="collapse menu-dropdown" id="sidebarGames">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="/games" class="nav-link" data-key="t-game-list">
-                            Game List
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="game-details.html" class="nav-link" data-key="t-game-details">
-                            Game Details
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/games/create-game" class="nav-link" data-key="t-create-game">
-                            Create Game
-                        </a>
+                        <a href="/games" class="nav-link" data-key="t-game-list">Game List</a>
                     </li>
                 </ul>
             </div>
-        </li> <!-- end Games Menu -->
+        </li>
+
+        <li class="menu-title">
+            <span data-key="t-platform-services">Platform Services</span>
+        </li>
 
         <li class="nav-item">
-            <a class="nav-link menu-link" href="#sidebarFunctions" data-bs-toggle="collapse" role="button"
-               aria-expanded="false" aria-controls="sidebarFunctions">
-                <i class="ri-function-line"></i> <span data-key="t-functions">Functions</span>
+            <a class="nav-link menu-link" href="#sidebarCloudFunctions" data-bs-toggle="collapse" role="button"
+               aria-expanded="false" aria-controls="sidebarCloudFunctions">
+                <i class="ri-function-line"></i> <span data-key="t-cloud-functions">Cloud Functions</span>
             </a>
-            <div class="collapse menu-dropdown" id="sidebarFunctions">
+            <div class="collapse menu-dropdown" id="sidebarCloudFunctions">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="functions-list.html" class="nav-link" data-key="t-function-list">
-                            Function List
-                        </a>
+                        <a href="/cloud-functions/providers" class="nav-link" data-key="t-providers">Providers</a>
                     </li>
                     <li class="nav-item">
-                        <a href="function-create.html" class="nav-link" data-key="t-create-function">
-                            Create Function
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="function-execute.html" class="nav-link" data-key="t-execute-function">
-                            Execute Function
-                        </a>
+                        <a href="/cloud-functions/templates" class="nav-link" data-key="t-templates">Templates</a>
                     </li>
                 </ul>
             </div>
-        </li> <!-- end Functions Menu -->
+        </li>
 
         <li class="nav-item">
-            <a class="nav-link menu-link" href="#sidebarNotifications" data-bs-toggle="collapse" role="button"
-               aria-expanded="false" aria-controls="sidebarNotifications">
-                <i class="ri-notification-line"></i> <span data-key="t-notifications">Notifications</span>
+            <a class="nav-link menu-link" href="#sidebarStorage" data-bs-toggle="collapse" role="button"
+               aria-expanded="false" aria-controls="sidebarStorage">
+                <i class="ri-database-2-line"></i> <span data-key="t-storage">Storage</span>
             </a>
-            <div class="collapse menu-dropdown" id="sidebarNotifications">
+            <div class="collapse menu-dropdown" id="sidebarStorage">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="notifications-list.html" class="nav-link" data-key="t-notification-list">
-                            Notification List
-                        </a>
+                        <a href="/storage/providers" class="nav-link" data-key="t-providers">Providers</a>
                     </li>
                     <li class="nav-item">
-                        <a href="notification-templates.html" class="nav-link" data-key="t-notification-templates">
-                            Notification Templates
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="notification-settings.html" class="nav-link" data-key="t-notification-settings">
-                            Notification Settings
-                        </a>
+                        <a href="/storage/buckets" class="nav-link" data-key="t-buckets">Buckets</a>
                     </li>
                 </ul>
             </div>
-        </li> <!-- end Notifications Menu -->
+        </li>
+
+        <li class="menu-title">
+            <span data-key="t-system">System</span>
+        </li>
 
         <li class="nav-item">
-            <a class="nav-link menu-link" href="#sidebarUsers" data-bs-toggle="collapse" role="button"
-               aria-expanded="false" aria-controls="sidebarUsers">
-                <i class="ri-user-line"></i> <span data-key="t-users">Users</span>
+            <a class="nav-link menu-link" href="#sidebarSettings" data-bs-toggle="collapse" role="button"
+               aria-expanded="false" aria-controls="sidebarSettings">
+                <i class="ri-settings-3-line"></i> <span data-key="t-settings">Settings</span>
             </a>
-            <div class="collapse menu-dropdown" id="sidebarUsers">
+            <div class="collapse menu-dropdown" id="sidebarSettings">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="users-list.html" class="nav-link" data-key="t-user-list">
-                            User List
-                        </a>
+                        <a href="/settings/general" class="nav-link" data-key="t-general">General</a>
                     </li>
                     <li class="nav-item">
-                        <a href="user-details.html" class="nav-link" data-key="t-user-details">
-                            User Details
-                        </a>
+                        <a href="/settings/security" class="nav-link" data-key="t-security">Security</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/settings/billing" class="nav-link" data-key="t-billing">Billing</a>
                     </li>
                 </ul>
             </div>
-        </li> <!-- end Users Menu -->
+        </li>
 
         <li class="nav-item">
-            <a class="nav-link menu-link" href="#sidebarLogs" data-bs-toggle="collapse" role="button"
-               aria-expanded="false" aria-controls="sidebarLogs">
-                <i class="ri-book-2-line"></i> <span data-key="t-logs">Logs</span>
+            <a class="nav-link menu-link" href="#sidebarAdmins" data-bs-toggle="collapse" role="button"
+               aria-expanded="false" aria-controls="sidebarAdmins">
+                <i class="ri-shield-user-line"></i> <span data-key="t-admins">Administrators</span>
             </a>
-            <div class="collapse menu-dropdown" id="sidebarLogs">
+            <div class="collapse menu-dropdown" id="sidebarAdmins">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="logs-activity.html" class="nav-link" data-key="t-activity-logs">
-                            Activity Logs
-                        </a>
+                        <a href="/admins" class="nav-link" data-key="t-admin-list">Admin List</a>
                     </li>
                     <li class="nav-item">
-                        <a href="logs-errors.html" class="nav-link" data-key="t-error-logs">
-                            Error Logs
-                        </a>
+                        <a href="/admins/roles" class="nav-link" data-key="t-roles">Roles</a>
                     </li>
                 </ul>
             </div>
-        </li> <!-- end Logs Menu -->
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link menu-link" href="/platform-logs">
+                <i class="ri-file-list-3-line"></i> <span data-key="t-platform-logs">Platform Logs</span>
+            </a>
+        </li>
     </ul>
 </div>
