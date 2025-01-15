@@ -1,4 +1,5 @@
-﻿version: '3.8'
+﻿# docker-compose.prod.yml
+version: '3.8'
 
 services:
   gamecloud.dashboard:
@@ -9,10 +10,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:8081
-      - ApiUrl__GameCloud=${MAIN_API_URL}
+      - ApiUrl__GameCloud=http://${MAIN_SERVICE_IP}:${MAIN_SERVICE_PORT}
     networks:
-      - gamecloud_gamecloud_network
+      - dashboard_network
 
 networks:
-  gamecloud_gamecloud_network:
-    external: true
+  dashboard_network:
+    driver: bridge
