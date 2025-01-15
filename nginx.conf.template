@@ -19,9 +19,9 @@ http {
         server gamecloud_dashboard:8081;
     }
 
-    upstream api {
-        server 158.160.162.131:8080;
-    }
+   upstream api {
+       server ${MAIN_SERVICE_IP}:${MAIN_SERVICE_PORT};
+   }
 
     server {
         listen 80;
