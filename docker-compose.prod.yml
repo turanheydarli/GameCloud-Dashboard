@@ -1,18 +1,33 @@
-﻿# docker-compose.prod.yml
-version: '3.8'
+﻿version: '3.8'
 
 services:
   gamecloud.dashboard:
     container_name: ${DASHBOARD_CONTAINER_NAME}
     image: ${DASHBOARD_IMAGE}:${DASHBOARD_IMAGE_TAG}
-    ports:
-      - "${DASHBOARD_PORT}:8081"
+    expose:
+      - "8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:8081
-      - ApiUrl__GameCloud=http://${MAIN_SERVICE_IP}:${MAIN_SERVICE_PORT}
+      - ApiUrl__GameCloud=/api  
+      - Jwt__SecretKey=${JWT_SECRET_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - Jwt__Expiration=${JWT_EXPIRATION} 
     networks:
       - dashboard_network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - gamecloud.dashboard
+    networks:
+      - dashboard_network
+    restart: unless-stopped
 
 networks:
   dashboard_network:

@@ -5,6 +5,7 @@
 
 # dotenv files
 .env
+nginx.conf
 
 # User-specific files
 *.rsuser
