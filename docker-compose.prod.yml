@@ -1,0 +1,18 @@
+﻿version: '3.8'
+
+services:
+  gamecloud.dashboard:
+    container_name: ${DASHBOARD_CONTAINER_NAME}
+    image: ${DASHBOARD_IMAGE}:${DASHBOARD_IMAGE_TAG}
+    ports:
+      - "${DASHBOARD_PORT}:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=http://+:8081
+      - ApiUrl__GameCloud=${MAIN_API_URL}
+    networks:
+      - gamecloud_gamecloud_network
+
+networks:
+  gamecloud_gamecloud_network:
+    external: true

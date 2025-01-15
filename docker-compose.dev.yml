@@ -12,10 +12,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
-      - ApiUrl__GameCloud=http://gamecloud_main:8080 
+      - ApiUrl__GameCloud=http://gamecloud_main:8080
     networks:
-      - gamecloud_gamecloud_network 
+      - gamecloud_gamecloud_network
 
 networks:
   gamecloud_gamecloud_network:
-    external: true  
+    external: true
