@@ -34,8 +34,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <h6 class="text-muted mb-3">Total Executions (24h)</h6>
-                        @* <h2 class="mb-0">@Model.Stats.TotalExecutions24h</h2> *@
-                        <h2 class="mb-0">100</h2>
+                        <h2 class="mb-0">@Model.Stats.TotalExecutions</h2>
                     </div>
                     <div class="flex-shrink-0 avatar-sm">
                         <span class="avatar-title bg-primary-subtle text-primary rounded fs-3">
@@ -52,8 +51,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <h6 class="text-muted mb-3">Success Rate (24h)</h6>
-                        @* <h2 class="mb-0">@Model.Stats.SuccessRate24h.ToString("0.00")%</h2> *@
-                        <h2 class="mb-0">100%</h2>
+                        <h2 class="mb-0">@Model.Stats.OverallSuccessRate.ToString("0.00")%</h2>
                     </div>
                     <div class="flex-shrink-0 avatar-sm">
                         <span class="avatar-title bg-success-subtle text-success rounded fs-3">
@@ -70,8 +68,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <h6 class="text-muted mb-3">Avg Response Time</h6>
-                        @* <h2 class="mb-0">@Model.Stats.AvgResponseTime.TotalMilliseconds.ToString("0")ms</h2> *@
-                        <h2 class="mb-0">1ms</h2>
+                        <h2 class="mb-0">@Model.Stats.AverageExecutionTimeMs.ToString("0")ms</h2>
                     </div>
                     <div class="flex-shrink-0 avatar-sm">
                         <span class="avatar-title bg-warning-subtle text-warning rounded fs-3">
@@ -88,8 +85,7 @@
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <h6 class="text-muted mb-3">Active Functions</h6>
-                        @* <h2 class="mb-0">@Model.Stats.ActiveFunctionCount</h2> *@
-                        <h2 class="mb-0">0</h2>
+                        <h2 class="mb-0">@Model.Stats.ActiveFunctions</h2>
                     </div>
                     <div class="flex-shrink-0 avatar-sm">
                         <span class="avatar-title bg-info-subtle text-info rounded fs-3">
@@ -232,9 +228,13 @@
                             }
                         </td>
                         <td>
+
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" @(function.IsEnabled ? "checked" : "")
-                                       onchange="toggleFunction('@function.Id', this.checked)">
+                                <input class="form-check-input" type="checkbox"
+                                       data-action="toggle"
+                                       data-function-id="@function.Id"
+                                       @(function.IsEnabled ? "checked" : "")>
+
                                 <label class="form-check-label">@(function.IsEnabled ? "Active" : "Inactive")</label>
                             </div>
                         </td>
@@ -257,22 +257,20 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item edit-function" href="#"
-                                           data-function-id="@function.Id"
-                                           data-function-name="@function.Name"
-                                           data-function-action-type="@function.ActionType"
-                                           data-function-endpoint="@function.Endpoint">
-                                            <i class="ri-pencil-line align-bottom me-2 text-muted"></i>
-                                            Edit
+                                        <a class="dropdown-item" href="#"
+                                           data-action="edit"
+                                           data-function-id="@function.Id">
+                                            <i class="ri-pencil-line align-bottom me-2 text-muted"></i> Edit
                                         </a>
                                     </li>
+
                                     <li class="dropdown-divider"></li>
                                     <li>
-                                        <a class="dropdown-item text-danger delete-function" href="#"
+                                        <a class="dropdown-item text-danger" href="#"
+                                           data-action="delete"
                                            data-function-id="@function.Id"
                                            data-function-name="@function.Name">
-                                            <i class="ri-delete-bin-line align-bottom me-2"></i>
-                                            Delete
+                                            <i class="ri-delete-bin-line align-bottom me-2"></i> Delete
                                         </a>
                                     </li>
                                 </ul>
@@ -343,7 +341,8 @@
 <div class="modal fade" id="functionModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <form id="functionForm" asp-page-handler="Post" method="post">
+            <form id="functionForm" method="post" action="?handler=Create">
+                @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h5 class="modal-title" id="functionModalTitle">Register Function</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -451,5 +450,5 @@
 </template>
 
 @section Scripts {
-    <script src="~/js/gameFunctions.js"></script>
+    <script src="~/js/gameFunctions.js" asp-append-version="true"></script>
 }

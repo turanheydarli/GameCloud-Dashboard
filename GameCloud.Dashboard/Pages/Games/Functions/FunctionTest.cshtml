@@ -1,9 +1,11 @@
 @page "/game/{gameId:guid}/functions/{functionId:guid}/test"
+@using GameCloud.Dashboard.Models.Responses
 @model FunctionTestModel
 
 @{
-Layout = "_GameLayout";
+    Layout = "_GameLayout";
 }
+@Html.AntiForgeryToken()
 
 <div class="container-fluid">
     <!-- Page title -->
@@ -13,9 +15,15 @@ Layout = "_GameLayout";
                 <h4 class="mb-sm-0">Test Function: @Model.Function.Name</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="/games">Games</a></li>
-                        <li class="breadcrumb-item"><a href="/game/@Model.GameId">@Model.Game.Name</a></li>
-                        <li class="breadcrumb-item"><a href="/game/@Model.GameId/functions">Functions</a></li>
+                        <li class="breadcrumb-item">
+                            <a href="/games">Games</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="/game/@Model.GameId">@Model.Game.Name</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="/game/@Model.GameId/functions">Functions</a>
+                        </li>
                         <li class="breadcrumb-item active">Test Function</li>
                     </ol>
                 </div>
@@ -56,11 +64,11 @@ Layout = "_GameLayout";
                                 <td>
                                     @if (Model.Function.IsEnabled)
                                     {
-                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                        <span class="badge bg-success-subtle text-success">Active</span>
                                     }
                                     else
                                     {
-                                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                        <span class="badge bg-danger-subtle text-danger">Inactive</span>
                                     }
                                 </td>
                             </tr>
@@ -86,36 +94,36 @@ Layout = "_GameLayout";
                             </tr>
                             </thead>
                             <tbody>
-                            @* @foreach (var test in Model.RecentTests) *@
-                            @* { *@
-                            @* <tr class="test-result" data-test-id="@test.Id"> *@
-                            @*     <td>@test.ExecutedAt.ToString("HH:mm:ss")</td> *@
-                            @*     <td> *@
-                            @*         @if (test.IsSuccess) *@
-                            @*         { *@
-                            @*         <span class="badge bg-success-subtle text-success"> *@
-                            @*                         <i class="ri-checkbox-circle-fill me-1"></i> Success *@
-                            @*                     </span> *@
-                            @*         } *@
-                            @*         else *@
-                            @*         { *@
-                            @*         <span class="badge bg-danger-subtle text-danger"> *@
-                            @*                         <i class="ri-error-warning-fill me-1"></i> Failed *@
-                            @*                     </span> *@
-                            @*         } *@
-                            @*     </td> *@
-                            @*     <td>@test.ExecutionTimeMs ms</td> *@
-                            @* </tr> *@
-                            @* } *@
+                            @foreach (var test in Model.RecentTests.Items)
+                            {
+                                <tr class="test-result" data-test-id="@test.Id">
+                                    <td>@test.CreatedAt.ToString("HH:mm:ss")</td>
+                                    <td>
+                                        @if (test.Status != FunctionStatus.Failed)
+                                        {
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="ri-checkbox-circle-fill me-1"></i> Success
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger">
+                                                <i class="ri-error-warning-fill me-1"></i> Failed
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>@test.ExecutionTimeMs ms</td>
+                                </tr>
+                            }
                             </tbody>
                         </table>
                     </div>
 
-                    @* @if (!Model.RecentTests.Any()) *@
+                    @if (!Model.RecentTests.Items.Any())
                     {
-                    <div class="text-center py-3">
-                        <p class="text-muted mb-0">No test results yet.</p>
-                    </div>
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-0">No test results yet.</p>
+                        </div>
                     }
                 </div>
             </div>
@@ -182,8 +190,8 @@ Layout = "_GameLayout";
 </div>
 
 @section Scripts {
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
-<script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+    <script>
     // Initialize editors
     const requestEditor = ace.edit("requestEditor");
     requestEditor.setTheme("ace/theme/tomorrow");
@@ -235,15 +243,21 @@ Layout = "_GameLayout";
             responseEditor.setValue('Sending request...');
             document.getElementById('responseStats').style.display = 'none';
 
-            // Send request
-            const response = await fetch('/api/games/@Model.GameId/functions/@Model.Function.Id/test', {
+            const response = await fetch('/game/@Model.GameId/functions/@Model.FunctionId/test', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value // Add antiforgery token
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    // Match these properties to your ActionRequest model
+                    Payload: payload,
+                    ActionType: "@Model.Function.ActionType", // Use the function's action type
+                    SessionId: "00000000-0000-0000-0000-000000000000",
+                    ClientVersion: "v0.0.1-test",
+                    ClientPlatform: "WEB_DASHBOARD"
+                })
             });
-
             const endTime = performance.now();
             const responseTime = Math.round(endTime - startTime);
 
@@ -295,7 +309,7 @@ Layout = "_GameLayout";
         row.addEventListener('click', async () => {
             try {
                 const testId = row.dataset.testId;
-                const response = await fetch(`/api/games/@Model.GameId/functions/@Model.Function.Id/tests/${testId}`);
+                const response = await fetch(`/games/@Model.GameId/functions/@Model.Function.Id/tests/${testId}`);
                 const test = await response.json();
 
                 requestEditor.setValue(JSON.stringify(test.request, null, 2));

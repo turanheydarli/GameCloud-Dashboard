@@ -21,56 +21,58 @@ public class GameFunctionsModel(IGameClient gameClient, ILogger<GameFunctionsMod
     public PageableListResponse<FunctionResponse> Functions { get; private set; }
     public string? ErrorMessage { get; private set; }
 
+    public ActionListStatsResponse Stats { get; private set; }
+
     public async Task<IActionResult> OnGetAsync([FromRoute] Guid gameId)
     {
         try
         {
-            Game = await gameClient.GetAsync(gameId);
-
-            Functions = await gameClient.GetFunctionsAsync(GameId, new PageableRequest
+            var getGameTask = gameClient.GetAsync(gameId);
+            var getFunctionsTask = gameClient.GetFunctionsAsync(gameId, new PageableRequest
             {
                 PageIndex = Page,
                 PageSize = PageSize,
             });
+            var getStatsTask = gameClient.GetListFunctionStatsAsync(gameId);
+
+            try
+            {
+                // Await all tasks concurrently
+                await Task.WhenAll(getGameTask, getFunctionsTask, getStatsTask);
+            }
+            catch (Exception ex)
+            {
+                // Log error and set error message for partial failures
+                logger.LogError(ex, "Error loading game data for game {GameId}", gameId);
+                ErrorMessage = "Failed to load some game data. Please try again.";
+            }
+
+            // Assign results to properties
+            Game = await getGameTask;
+            Functions = await getFunctionsTask;
+            Stats = await getStatsTask;
 
             return Page();
         }
         catch (Exception ex)
         {
+            // Log error and set error message for complete failure
             logger.LogError(ex, "Error loading game functions for game {GameId}", gameId);
             ErrorMessage = "Failed to load game functions. Please try again.";
             return Page();
         }
     }
 
-    public async Task<IActionResult> OnPostAsync([FromForm] FunctionRequest request)
+
+    public async Task<IActionResult> OnPostCreateAsync([FromForm] FunctionRequest request)
     {
-        try
+        await gameClient.CreateFunctionAsync(GameId, request with
         {
-            if (!ModelState.IsValid)
-            {
-                logger.LogWarning("Invalid model state for function creation: {Errors}",
-                    string.Join(", ", ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)));
+            GameId = GameId,
+            IsEnabled = true
+        });
 
-                return Page();
-            }
-
-            await gameClient.CreateFunctionAsync(GameId, request with
-            {
-                GameId = GameId,
-                IsEnabled = true
-            });
-
-            return RedirectToPage();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error creating function for game {GameId}", GameId);
-            ErrorMessage = "Failed to create function. Please try again.";
-            return Page();
-        }
+        return RedirectToPage();
     }
 
     public async Task<IActionResult> OnPostUpdateAsync([FromForm] FunctionRequest request)
@@ -118,7 +120,7 @@ public class GameFunctionsModel(IGameClient gameClient, ILogger<GameFunctionsMod
     {
         try
         {
-            // await _gameClient.ToggleFunctionAsync(GameId, functionId, isEnabled);
+             await gameClient.ToggleFunctionAsync(GameId, functionId, isEnabled);
             return RedirectToPage();
         }
         catch (Exception ex)
@@ -132,20 +134,11 @@ public class GameFunctionsModel(IGameClient gameClient, ILogger<GameFunctionsMod
 
     public async Task<IActionResult> OnGetFunctionAsync([FromQuery] Guid functionId)
     {
-        try
-        {
-            var function = await gameClient.GetFunctionAsync(GameId, functionId);
-            return new JsonResult(function);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error fetching function {FunctionId} for game {GameId}",
-                functionId, GameId);
-            return new JsonResult(new { error = "Failed to fetch function details" })
-            {
-                StatusCode = 500
-            };
-        }
+        var function = await gameClient.GetFunctionAsync(GameId, functionId);
+        if (function == null)
+            return NotFound(new { error = "Function not found" });
+
+        return new JsonResult(function);
     }
 
     public string GetPageUrl(int pageNumber)
@@ -183,6 +176,7 @@ public class GameFunctionsModel(IGameClient gameClient, ILogger<GameFunctionsMod
             };
         }
     }
+
 
     public override void OnPageHandlerExecuting(PageHandlerExecutingContext context)
     {

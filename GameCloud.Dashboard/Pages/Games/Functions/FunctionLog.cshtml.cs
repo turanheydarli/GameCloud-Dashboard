@@ -1,4 +1,5 @@
 using GameCloud.Dashboard.Abstractions;
+using GameCloud.Dashboard.Models.Requests;
 using GameCloud.Dashboard.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -21,8 +22,8 @@ public class FunctionLogsModel(IGameClient gameClient) : PageModel
 
     public GameResponse Game { get; set; }
     public FunctionResponse Function { get; set; }
-    public PageableListResponse<FunctionLogResponse> Logs { get; set; }
-    public FunctionLogStatsResponse LogStats { get; set; }
+    public ActionStatsResponse Stats { get; set; }
+    public PageableListResponse<ActionResponse> Logs { get; set; }
 
     [BindProperty(SupportsGet = true)]
     [FromRoute(Name = "gameId")]
@@ -34,8 +35,13 @@ public class FunctionLogsModel(IGameClient gameClient) : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        Game = await gameClient.GetAsync(GameId);
-        Function = await gameClient.GetFunctionAsync(GameId, FunctionId);
+        var getGameTask = gameClient.GetAsync(GameId);
+        var getFunctionTask = gameClient.GetFunctionAsync(GameId, FunctionId);
+        var getLogsTask = gameClient.GetTestedFunctionLogsAsync(GameId, FunctionId, new PageableRequest()
+        {
+            PageSize = PageSize,
+            PageIndex = Page,
+        });
 
         DateTime? startDate = null;
         DateTime? endDate = null;
@@ -61,6 +67,15 @@ public class FunctionLogsModel(IGameClient gameClient) : PageModel
                 _ => endDate.Value.AddDays(-1) // Default to 24h
             };
         }
+
+        var getStatsTask = gameClient.GetFunctionStatsAsync(GameId, FunctionId);
+
+        await Task.WhenAll(getGameTask, getFunctionTask, getStatsTask, getLogsTask);
+
+        Game = await getGameTask;
+        Function = await getFunctionTask;
+        Stats = await getStatsTask;
+        Logs = await getLogsTask;
 
         var logsRequest = new GetFunctionLogsRequest
         {

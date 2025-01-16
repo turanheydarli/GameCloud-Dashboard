@@ -19,8 +19,10 @@ public interface IGameClient
 
     [Put("/api/v1/games/{gameId}")]
     Task<GameResponse> UpdateAsync(Guid gameId, [Body] GameRequest request);
+
     [Get("/api/v1/games/{gameId}/details")]
     Task<GameDetailResponse> GetGameDetailsAsync(Guid gameId);
+
     [Delete("/api/v1/games/{gameId}")]
     Task DeleteAsync(Guid gameId);
 
@@ -66,6 +68,40 @@ public interface IGameClient
 
     [Delete("/api/v1/games/{gameId}/functions/{functionId}")]
     Task DeleteFunctionAsync(Guid gameId, Guid functionId);
+
+    [Put("/api/v1/games/{gameId}/functions/{functionId}/toggle")]
+    Task ToggleFunctionAsync(Guid gameId, Guid functionId, bool isEnabled);
+
+    #endregion
+
+    #region Function Stats
+
+    [Get("/api/v1/games/{gameId}/functions/{functionId}/stats")]
+    Task<ActionStatsResponse> GetFunctionStatsAsync(
+        Guid gameId,
+        Guid functionId,
+        [Query] DateTime? from = null,
+        [Query] DateTime? to = null);
+
+    [Get("/api/v1/games/{gameId}/functions/stats")]
+    Task<ActionListStatsResponse> GetListFunctionStatsAsync(
+        Guid gameId,
+        [Query] DateTime? from = null,
+        [Query] DateTime? to = null);
+
+    #endregion
+
+
+    #region Function Testing
+
+    [Post("/api/v1/games/{gameId}/functions/{functionId}/test")]
+    Task<ActionResponse> TestFunctionAsync(Guid gameId, Guid functionId, [Body] ActionRequest request);
+
+    [Get("/api/v1/games/{gameId}/functions/{functionId}/test/logs")]
+    Task<PageableListResponse<ActionResponse>> GetTestedFunctionLogsAsync(
+        Guid gameId,
+        Guid functionId,
+        [Query] PageableRequest? pageableRequest);
 
     #endregion
 }

@@ -14,8 +14,33 @@ public class ApiExceptionHandlerFilter(IToastNotification toastNotification) : I
     {
         if (context.Exception is ApiException apiException)
         {
-            HandleApiException(context, apiException);
+            var isAjaxRequest = context.HttpContext.Request.Headers["X-Requested-With"] == "Fetch";
+
+            if (isAjaxRequest)
+            {
+                HandleApiExceptionForAjax(context, apiException);
+            }
+            else
+            {
+                HandleApiException(context, apiException);
+            }
         }
+    }
+
+    private void HandleApiExceptionForAjax(ExceptionContext context, ApiException apiException)
+    {
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(
+            apiException.Content ?? string.Empty,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
+
+        //new { detail = apiException.Message }
+
+        context.Result = new JsonResult(problemDetails)
+        {
+            StatusCode = (int)apiException.StatusCode
+        };
+        context.ExceptionHandled = true;
     }
 
     private void HandleApiException(ExceptionContext context, ApiException apiException)
@@ -82,7 +107,7 @@ public class ApiExceptionHandlerFilter(IToastNotification toastNotification) : I
         System.Net.HttpStatusCode statusCode)
     {
         toastNotification.AddErrorToastMessage(problemDetails.Detail);
-        
+
         if (!string.IsNullOrEmpty(problemDetails.Detail))
         {
             context.ModelState.AddModelError(string.Empty, problemDetails.Detail);
