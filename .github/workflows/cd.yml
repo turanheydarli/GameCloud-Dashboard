@@ -1,0 +1,85 @@
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    branches: [main]
+    types:
+      - completed
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  LATEST_TAG: latest
+  YC_REGISTRY: cr.yandex/crpl3p256m938dtgp3lh
+  APP_NAME: gamecloud-dashboard
+  KUBE_NAMESPACE: gamecloud
+
+jobs:
+  deploy:
+    environment: production
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Login to Yandex Cloud Container Registry
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_K8S_JSON_CREDENTIALS }}
+
+      - name: Build and push
+        run: |
+          docker build -t ${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }} \
+            --build-arg BUILD_VERSION=${{ env.IMAGE_TAG }} \
+            -f ./GameCloud.Dashboard/Dockerfile .
+          docker tag ${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }} \
+            ${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}:${{ env.LATEST_TAG }}
+          docker push ${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}
+          docker push ${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}:${{ env.LATEST_TAG }}
+
+      - name: Install Yandex Cloud CLI
+        run: |
+          curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          export PATH="/home/runner/yandex-cloud/bin:${PATH}"
+          source "/home/runner/.bashrc"
+
+      - name: Configure Yandex Cloud CLI
+        env:
+          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ secrets.YC_K8S_JSON_CREDENTIALS }}
+        run: |
+          export PATH=$PATH:~/yandex-cloud/bin
+          yc config profile create sa-profile || true
+          yc config set service-account-key <(echo "$YC_SERVICE_ACCOUNT_KEY_FILE")
+          yc config set cloud-id ${{ secrets.YC_CLOUD_ID }}
+          yc config set folder-id ${{ secrets.YC_FOLDER_ID }}
+          yc managed-kubernetes cluster get-credentials ${{ secrets.YC_CLUSTER_ID }} --external
+
+      - name: Update Kubernetes resources
+        run: |
+          cd k8s/overlays/production
+          kustomize edit set image ${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}=${{ env.YC_REGISTRY }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}
+          kustomize build . > manifests.yaml
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -k k8s/overlays/production
+          kubectl rollout status deployment/${{ env.APP_NAME }} -n ${{ env.KUBE_NAMESPACE }} --timeout=300s
+
+      - name: Verify Deployment
+        run: |
+          kubectl get deployment ${{ env.APP_NAME }} -n ${{ env.KUBE_NAMESPACE }} -o wide
+          kubectl get svc -n ${{ env.KUBE_NAMESPACE }} -l app=${{ env.APP_NAME }}
+          kubectl get ingress -n ${{ env.KUBE_NAMESPACE }}
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          kubectl describe deployment ${{ env.APP_NAME }} -n ${{ env.KUBE_NAMESPACE }}
+          kubectl get events -n ${{ env.KUBE_NAMESPACE }} --sort-by='.metadata.creationTimestamp'

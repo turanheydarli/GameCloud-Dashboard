@@ -35,14 +35,6 @@ public class FunctionLogsModel(IGameClient gameClient) : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        var getGameTask = gameClient.GetAsync(GameId);
-        var getFunctionTask = gameClient.GetFunctionAsync(GameId, FunctionId);
-        var getLogsTask = gameClient.GetTestedFunctionLogsAsync(GameId, FunctionId, new PageableRequest()
-        {
-            PageSize = PageSize,
-            PageIndex = Page,
-        });
-
         DateTime? startDate = null;
         DateTime? endDate = null;
 
@@ -67,6 +59,42 @@ public class FunctionLogsModel(IGameClient gameClient) : PageModel
                 _ => endDate.Value.AddDays(-1) // Default to 24h
             };
         }
+
+        var getGameTask = gameClient.GetAsync(GameId);
+        var getFunctionTask = gameClient.GetFunctionAsync(GameId, FunctionId);
+        Filter filter = new Filter(
+            Field: "CreatedAt",
+            Operator: "lte",
+            Value: endDate.Value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+            Logic: "and",
+            Filters: new[]
+            {
+                new Filter(
+                    Field: "CreatedAt",
+                    Operator: "gte",
+                    Value: startDate.Value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+                ),
+                string.IsNullOrEmpty(Search) ? null : 
+                    new Filter(
+                        Field: "Payload",
+                        Operator: "jsonsearch",
+                        Value: Search,
+                        Logic: "and"
+                    )
+            }.Where(f => f != null).ToArray() // Remove null filters
+        );
+
+        var request = new DynamicRequest(
+            Sort: new[]
+            {
+                new Sort("CreatedAt", "desc")
+            },
+            Filter: filter,
+            PageIndex: Page,
+            PageSize: PageSize
+        );
+
+        var getLogsTask = gameClient.GetFunctionLogsAsync(GameId, FunctionId, request);
 
         var getStatsTask = gameClient.GetFunctionStatsAsync(GameId, FunctionId);
 
@@ -100,7 +128,7 @@ public class FunctionLogsModel(IGameClient gameClient) : PageModel
             { "timeRange", TimeRange },
             { "status", Status ?? "" },
             { "search", Search ?? "" },
-            { "page", pageIndex.ToString() }
+            { "pageIndex", pageIndex.ToString() }
         };
 
         if (TimeRange == "custom")

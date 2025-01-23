@@ -352,7 +352,7 @@
             btn.addEventListener('click', async () => {
                 const logId = btn.dataset.logId;
                 try {
-                    const response = await fetch(`/api/games/@Model.GameId/functions/@Model.FunctionId/logs/${logId}`);
+                    const response = await fetch(`/game/@Model.GameId/functions/@Model.FunctionId/logs/${logId}`);
                     const log = await response.json();
                     
                     // Update modal content
@@ -388,7 +388,7 @@
         // Retry execution
         async function retryExecution(logId) {
             try {
-                const response = await fetch(`/api/games/@Model.GameId/functions/@Model.FunctionId/logs/${logId}/retry`, {
+                const response = await fetch(`/games/@Model.GameId/functions/@Model.FunctionId/logs/${logId}/retry`, {
                     method: 'POST'
                 });
 

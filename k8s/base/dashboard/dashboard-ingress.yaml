@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gamecloud-dashboard-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cloud.playables.studio
+      http:
+        paths:
+          - path: /
+            pathType: Prefix  
+            backend:
+              service:
+                name: gamecloud-dashboard
+                port:
+                  number: 80

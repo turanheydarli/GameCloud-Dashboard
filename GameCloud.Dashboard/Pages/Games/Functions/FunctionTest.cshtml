@@ -246,6 +246,7 @@
             const response = await fetch('/game/@Model.GameId/functions/@Model.FunctionId/test', {
                 method: 'POST',
                 headers: {
+                'X-Requested-With': 'XMLHttpRequest',
                     'Content-Type': 'application/json',
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value // Add antiforgery token
                 },

@@ -32,6 +32,8 @@ public class GameFunctionsModel(IGameClient gameClient, ILogger<GameFunctionsMod
             {
                 PageIndex = Page,
                 PageSize = PageSize,
+                Search = Search,
+                IsAscending = false
             });
             var getStatsTask = gameClient.GetListFunctionStatsAsync(gameId);
 
@@ -73,6 +75,19 @@ public class GameFunctionsModel(IGameClient gameClient, ILogger<GameFunctionsMod
         });
 
         return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        Functions = await gameClient.GetFunctionsAsync(GameId, new PageableRequest
+        {
+            PageIndex = Page,
+            PageSize = PageSize,
+            Search = Search,
+            IsAscending = false
+        });
+
+        return new JsonResult(Functions);
     }
 
     public async Task<IActionResult> OnPostUpdateAsync([FromForm] FunctionRequest request)
@@ -120,7 +135,7 @@ public class GameFunctionsModel(IGameClient gameClient, ILogger<GameFunctionsMod
     {
         try
         {
-             await gameClient.ToggleFunctionAsync(GameId, functionId, isEnabled);
+            await gameClient.ToggleFunctionAsync(GameId, functionId, isEnabled);
             return RedirectToPage();
         }
         catch (Exception ex)
@@ -138,6 +153,31 @@ public class GameFunctionsModel(IGameClient gameClient, ILogger<GameFunctionsMod
         if (function == null)
             return NotFound(new { error = "Function not found" });
 
+        return new JsonResult(function);
+    }
+
+    public async Task<IActionResult> OnGetExecutionStatusAsync([FromQuery] Guid functionId)
+    {
+        var status = await gameClient.GetFunctionLogsAsync(GameId, functionId, new DynamicRequest(
+            Sort: new Sort[]
+            {
+                new Sort("CreatedAt", "desc")
+            },
+            Filter: null,
+            PageIndex: 0,
+            PageSize: 1
+        ));
+
+        return new JsonResult(new
+        {
+            lastExecutedAt = status.Items.Any() ? status.Items[0].StartedAt : (DateTime?)null,
+            lastErrorMessage = status.Items.Any() ? status.Items[0].ErrorMessage : null
+        });
+    }
+
+    public async Task<IActionResult> OnGetFunctionStatsAsync([FromQuery] Guid functionId)
+    {
+        var function = await gameClient.GetFunctionStatsAsync(GameId, functionId);
         return new JsonResult(function);
     }
 

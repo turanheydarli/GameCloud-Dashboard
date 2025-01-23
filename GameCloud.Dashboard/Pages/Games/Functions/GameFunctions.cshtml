@@ -193,39 +193,22 @@
                             </div>
                         </td>
                         <td>
-                            <div class="d-flex flex-column">
+                            <div class="d-flex flex-column" id="stats-@function.Id">
                                 <small class="text-muted mb-1">
-                                    @* Success Rate: <span class="fw-medium">@(function.Stats?.SuccessRate.ToString("0.00"))%</span> *@
-                                    Success Rate: <span class="fw-medium">100%</span>
+                                    Success Rate: <span class="fw-medium stats-success-rate">...</span>
                                 </small>
                                 <small class="text-muted mb-1">
-                                    @* Avg Time: <span class="fw-medium">@(function.Stats?.AvgResponseTime.TotalMilliseconds.ToString("0"))ms</span> *@
-                                    Avg Time: <span class="fw-medium">5ms</span>
+                                    Avg Time: <span class="fw-medium stats-avg-time">...</span>
                                 </small>
                                 <small class="text-muted">
-                                    @* Calls: <span class="fw-medium">@(function.Stats?.TotalCalls ?? 0)</span> *@
-                                    Calls: <span class="fw-medium">10</span>
+                                    Calls: <span class="fw-medium stats-total-calls">...</span>
                                 </small>
                             </div>
                         </td>
                         <td>
-                            @* @if (function.LastExecutedAt.HasValue) *@
-                            @* { *@
-                            @*     <small class="text-muted">@function.LastExecutedAt.Value.ToString("MMM dd, HH:mm")</small> *@
-                            @*     @if (!string.IsNullOrEmpty(function.LastErrorMessage)) *@
-                            @*     { *@
-                            @*         <div class="mt-1"> *@
-                            @*             <span class="badge bg-danger-subtle text-danger" data-bs-toggle="tooltip" *@
-                            @*                   title="@function.LastErrorMessage"> *@
-                            @*                 <i class="ri-error-warning-line me-1"></i> Error *@
-                            @*             </span> *@
-                            @*         </div> *@
-                            @*     } *@
-                            @* } *@
-                            else
-                            {
-                            <span class="text-muted">Never executed</span>
-                            }
+                            <div id="execution-status-@function.Id" class="d-flex flex-column">
+                                <span class="text-muted">Loading...</span>
+                            </div>
                         </td>
                         <td>
 
@@ -289,7 +272,7 @@
                 <div class="avatar-lg mx-auto mb-4">
                     <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
                         <i class="ri-function-line"></i>
-                    </div>
+                    </div>s
                 </div>
                 <h5>No Functions Found</h5>
                 <p class="text-muted">Get started by registering your first cloud function.</p>
@@ -450,5 +433,8 @@
 </template>
 
 @section Scripts {
+    <script>
+        const gameId = '@Model.GameId';
+    </script>
     <script src="~/js/gameFunctions.js" asp-append-version="true"></script>
 }

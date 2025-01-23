@@ -95,13 +95,14 @@ public interface IGameClient
     #region Function Testing
 
     [Post("/api/v1/games/{gameId}/functions/{functionId}/test")]
-    Task<ActionResponse> TestFunctionAsync(Guid gameId, Guid functionId, [Body] ActionRequest request);
+    Task<ActionResponse> TestFunctionAsync(Guid gameId, Guid functionId, [Body] ActionRequest request,
+        [Header("X-Game-Key")] string gameKey);
 
-    [Get("/api/v1/games/{gameId}/functions/{functionId}/test/logs")]
-    Task<PageableListResponse<ActionResponse>> GetTestedFunctionLogsAsync(
+    [Post("/api/v1/games/{gameId}/functions/{functionId}/logs")]
+    Task<PageableListResponse<ActionResponse>> GetFunctionLogsAsync(
         Guid gameId,
         Guid functionId,
-        [Query] PageableRequest? pageableRequest);
+        [Body] DynamicRequest? pageableRequest);
 
     #endregion
 }

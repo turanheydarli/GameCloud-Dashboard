@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: gamecloud
+
+resources:
+  - ../../base
+
+images:
+  - name: cr.yandex/crpl3p256m938dtgp3lh/gamecloud-dashboard
+    newTag: latest
+
+configMapGenerator:
+  - name: gamecloud-dashboard-config
+    literals:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - MAIN_API=""
+#  - behavior: merge
+
+commonLabels:
+  environment: production

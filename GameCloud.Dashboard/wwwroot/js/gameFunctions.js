@@ -2,8 +2,71 @@ class GameFunctionsManager {
     constructor() {
         this.refreshInterval = 30000;
         this.refreshTimer = null;
+        this.statsTimer = null;
         this.initializeEventListeners();
         this.startAutoRefresh();
+        this.loadAllFunctionStats();
+        this.loadAllExecutionStatuses(); // Add this line
+        this.startAutoStatsRefresh();
+    }
+
+    // Stats Management
+    async loadFunctionStats(functionId) {
+        const statsContainer = document.getElementById(`stats-${functionId}`);
+        if (!statsContainer) return;
+
+        statsContainer.classList.add('stats-loading');
+
+        try {
+            const response = await fetch(`/game/${gameId}/functions?handler=FunctionStats&functionId=${functionId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load stats');
+            }
+
+            const stats = await response.json();
+            statsContainer.querySelector('.stats-success-rate').textContent =
+                `${stats.successRate?.toFixed(2) || 0}%`;
+
+            statsContainer.querySelector('.stats-avg-time').textContent =
+                `${Math.round(stats.averageExecutionTimeMs || 0)}ms`;
+
+            statsContainer.querySelector('.stats-total-calls').textContent =
+                stats.totalExecutions || 0;
+
+        } catch (error) {
+            console.error(`Error loading stats for function ${functionId}:`, error);
+            statsContainer.querySelector('.stats-success-rate').textContent = 'Error';
+            statsContainer.querySelector('.stats-avg-time').textContent = 'Error';
+            statsContainer.querySelector('.stats-total-calls').textContent = 'Error';
+        } finally {
+            statsContainer.classList.remove('stats-loading');
+        }
+    }
+
+    loadAllFunctionStats() {
+        document.querySelectorAll('[id^="stats-"]').forEach(container => {
+            const functionId = container.id.replace('stats-', '');
+            this.loadFunctionStats(functionId);
+        });
+    }
+
+    startAutoStatsRefresh() {
+        this.stopAutoStatsRefresh();
+        this.statsTimer = setInterval(() => this.loadAllFunctionStats(), this.refreshInterval);
+    }
+
+    stopAutoStatsRefresh() {
+        if (this.statsTimer) {
+            clearInterval(this.statsTimer);
+            this.statsTimer = null;
+        }
     }
 
     // Form & Header Management
@@ -27,7 +90,7 @@ class GameFunctionsManager {
 
     updateHeaderIndexes() {
         const rows = document.querySelectorAll('#headersContainer .input-group');
-        rows.forEach((index, row) => {
+        rows.forEach((row, index) => {
             row.querySelector('input[name^="Headers["]').name = `Headers[${index}].Key`;
             row.querySelector('input[name$="].Value"]').name = `Headers[${index}].Value`;
         });
@@ -38,7 +101,6 @@ class GameFunctionsManager {
         const modal = document.getElementById('functionModal');
         if (!modal) return;
 
-        // Reset form before showing
         const form = modal.querySelector('#functionForm');
         if (form) {
             form.reset();
@@ -46,7 +108,6 @@ class GameFunctionsManager {
             document.getElementById('headersContainer').innerHTML = '';
         }
 
-        // Update modal title and button text
         modal.querySelector('#functionModalTitle').textContent =
             isEdit ? 'Edit Function' : 'Register Function';
         modal.querySelector('#submitButtonText').textContent =
@@ -63,7 +124,12 @@ class GameFunctionsManager {
         if (!functionId) return;
 
         try {
-            const response = await fetch(`?handler=Function&functionId=${functionId}`);
+            const response = await fetch(`?handler=Function&functionId=${functionId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
             if (!response.ok) throw new Error('Failed to fetch function details');
 
             const data = await response.json();
@@ -82,11 +148,9 @@ class GameFunctionsManager {
             return;
         }
 
-        // Clear form fields first
         form.reset();
         document.getElementById('headersContainer').innerHTML = '';
 
-        // Directly set each field based on the exact field names from the response
         const fields = [
             { responseKey: 'id', formName: 'Id' },
             { responseKey: 'name', formName: 'Name' },
@@ -109,16 +173,10 @@ class GameFunctionsManager {
                     } else {
                         input.value = data[responseKey] || '';
                     }
-                    console.log(`Set ${formName} to`, input.type === 'checkbox' ? input.checked : input.value);
-                } else {
-                    console.log(`Input not found for ${formName}`);
                 }
-            } else {
-                console.log(`Field ${responseKey} not present in response data`);
             }
         });
 
-        // Handle headers if present
         if (data.headers && typeof data.headers === 'object') {
             Object.entries(data.headers).forEach(([key, value]) => {
                 this.addHeaderRow();
@@ -128,19 +186,9 @@ class GameFunctionsManager {
                     const valueInput = lastRow.querySelector('input[name$="].Value"]');
                     if (keyInput) keyInput.value = key;
                     if (valueInput) valueInput.value = value;
-                    console.log(`Added header: ${key} = ${value}`);
                 }
             });
         }
-
-        // Verify form state after population
-        console.log('Form values after population:');
-        fields.forEach(({ formName }) => {
-            const input = form.querySelector(`[name="${formName}"]`);
-            if (input) {
-                console.log(`${formName}:`, input.type === 'checkbox' ? input.checked : input.value);
-            }
-        });
     }
 
     async handleToggle(functionId, enabled) {
@@ -159,11 +207,10 @@ class GameFunctionsManager {
             });
 
             if (!response.ok) throw new Error('Failed to update function status');
-            window.location.reload();
+            await this.refreshTable();
         } catch (error) {
             console.error('Error:', error);
             alert('Failed to update function status. Please try again.');
-            // Revert toggle state
             const toggle = document.querySelector(`[data-function-id="${functionId}"]`);
             if (toggle) toggle.checked = !enabled;
         }
@@ -184,7 +231,7 @@ class GameFunctionsManager {
             });
 
             if (!response.ok) throw new Error('Failed to delete function');
-            window.location.reload();
+            await this.refreshTable();
         } catch (error) {
             console.error('Error:', error);
             alert('Failed to delete function. Please try again.');
@@ -201,20 +248,21 @@ class GameFunctionsManager {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
-            // Update table
             const newTable = doc.querySelector('.table-responsive');
             const currentTable = document.querySelector('.table-responsive');
             if (newTable && currentTable) {
                 currentTable.innerHTML = newTable.innerHTML;
             }
 
-            // Update stats
             const newStats = doc.querySelectorAll('.card-animate');
             document.querySelectorAll('.card-animate').forEach((card, index) => {
                 if (newStats[index]) card.innerHTML = newStats[index].innerHTML;
             });
 
+            this.loadAllFunctionStats();
             this.initializeEventListeners();
+            this.loadAllExecutionStatuses();
+            
         } catch (error) {
             console.error('Error:', error);
         }
@@ -246,7 +294,7 @@ class GameFunctionsManager {
                     });
 
                     if (!response.ok) throw new Error('Form submission failed');
-                    window.location.reload();
+                    await this.refreshTable();
                 } catch (error) {
                     console.error('Error:', error);
                     alert('Form submission failed. Please try again.');
@@ -283,10 +331,12 @@ class GameFunctionsManager {
         // Refresh button
         const refreshBtn = document.getElementById('refreshTable');
         if (refreshBtn) {
-            refreshBtn.removeEventListener('click', this.refreshTable);
+            refreshBtn.removeEventListener('click', () => this.refreshTable);
             refreshBtn.addEventListener('click', () => {
                 this.refreshTable();
                 this.startAutoRefresh();
+                this.loadAllFunctionStats();
+                this.startAutoStatsRefresh();
             });
         }
 
@@ -294,13 +344,94 @@ class GameFunctionsManager {
         document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el =>
             new bootstrap.Tooltip(el));
     }
+    loadAllExecutionStatuses() {
+        document.querySelectorAll('[id^="execution-status-"]').forEach(container => {
+            const functionId = container.id.replace('execution-status-', '');
+            this.loadFunctionExecutionStatus(functionId);
+        });
+    }
+    async loadFunctionExecutionStatus(functionId) {
+        const statusContainer = document.getElementById(`execution-status-${functionId}`);
+        if (!statusContainer) return;
+
+        statusContainer.classList.add('status-loading');
+
+        try {
+            const response = await fetch(`/game/${gameId}/functions?handler=ExecutionStatus&functionId=${functionId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load execution status');
+            }
+
+            const status = await response.json();
+
+            if (status.lastExecutedAt) {
+                let html = `<small class="text-muted">${new Date(status.lastExecutedAt).toLocaleString('en-US', {
+                    month: 'short',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                })}</small>`;
+
+                if (status.lastErrorMessage) {
+                    html += `
+                    <div class="mt-1">
+                        <span class="badge bg-danger-subtle text-danger" data-bs-toggle="tooltip" 
+                              title="${status.lastErrorMessage}">
+                            <i class="ri-error-warning-line me-1"></i> Error
+                        </span>
+                    </div>`;
+                }
+                statusContainer.innerHTML = html;
+
+                // Reinitialize tooltip
+                const tooltip = statusContainer.querySelector('[data-bs-toggle="tooltip"]');
+                if (tooltip) {
+                    new bootstrap.Tooltip(tooltip);
+                }
+            } else {
+                statusContainer.innerHTML = '<span class="text-muted">Never executed</span>';
+            }
+
+        } catch (error) {
+            console.error(`Error loading execution status for function ${functionId}:`, error);
+            statusContainer.innerHTML = '<span class="text-muted">Error loading status</span>';
+        } finally {
+            statusContainer.classList.remove('status-loading');
+        }
+    }
 }
+
+// Add styles for loading state
+const style = document.createElement('style');
+style.textContent = `
+    .stats-loading {
+        opacity: 0.6;
+        position: relative;
+    }
+
+    .stats-loading::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.7);
+    }
+`;
+document.head.appendChild(style);
 
 // Initialize when document is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.gameFunctionsManager = new GameFunctionsManager();
 });
 
+// Global utility functions
 window.addHeaderRow = () => window.gameFunctionsManager?.addHeaderRow();
 window.removeHeaderRow = (button) => window.gameFunctionsManager?.removeHeaderRow(button);
 window.copyToClipboard = (text) => {
