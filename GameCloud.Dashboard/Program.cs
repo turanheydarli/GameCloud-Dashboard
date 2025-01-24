@@ -71,6 +71,9 @@ builder.Services.AddRefitClient<IGameClient>(builder.Configuration["ApiUrl:GameC
 builder.Services.AddRefitClient<IImagesClient>(builder.Configuration["ApiUrl:GameCloud"] ??
                                                throw new ArgumentNullException());
 
+builder.Services.AddRefitClient<IMatchmakingClient>(builder.Configuration["ApiUrl:GameCloud"] ??
+                                               throw new ArgumentNullException());
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

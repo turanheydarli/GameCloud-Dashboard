@@ -12,29 +12,22 @@ public class GamesModel(
     IGameClient gameClient,
     ILogger<GamesModel> logger) : PageModel
 {
-    [BindProperty(SupportsGet = true)] public string? SearchQuery { get; set; }
+    [BindProperty(SupportsGet = true)] public string? Search { get; set; }
     [BindProperty] public GameRequest GameRequest { get; set; }
 
     public PageableListResponse<GameResponse> Games { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
-        try
+        Games = await gameClient.GetAllAsync(new PageableRequest
         {
-            Games = await gameClient.GetAllAsync(new PageableRequest
-            {
-                PageIndex = 0,
-                PageSize = 12
-            });
+            PageIndex = 0,
+            PageSize = 12,
+            Search = Search,
+            IsAscending = false
+        });
 
-            return Page();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error loading games");
-            TempData["Error"] = "Failed to load games. Please try again.";
-            return RedirectToPage("/Index");
-        }
+        return Page();
     }
 
     public async Task<IActionResult> OnPostCreateAsync(IFormFile image = null)
