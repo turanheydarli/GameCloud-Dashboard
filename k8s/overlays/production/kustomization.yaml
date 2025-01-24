@@ -14,8 +14,7 @@ configMapGenerator:
   - name: gamecloud-dashboard-config
     literals:
       - ASPNETCORE_ENVIRONMENT=Production
-      - MAIN_API=""
-#  - behavior: merge
+      - MAIN_API=https://cloud.playables.studio
 
 commonLabels:
   environment: production

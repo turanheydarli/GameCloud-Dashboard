@@ -38,6 +38,9 @@ public interface IGameClient
 
     [Delete("/api/v1/games/{gameId}/keys/{key}")]
     Task DeleteKeyAsync(Guid gameId, string key);
+    
+    [Get("/api/v1/games/{gameId}/keys/default")]
+    Task<GameKeyResponse> GetOrCreateDefaultGameKey(Guid gameId);
 
     #endregion
 
@@ -105,4 +108,5 @@ public interface IGameClient
         [Body] DynamicRequest? pageableRequest);
 
     #endregion
+
 }

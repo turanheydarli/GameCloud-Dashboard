@@ -39,7 +39,10 @@ public class FunctionTestModel(IGameClient gameClient) : PageModel
 
     public async Task<IActionResult> OnPostAsync([FromBody] ActionRequest request)
     {
-        var testResult = await gameClient.TestFunctionAsync(GameId, FunctionId, request, "f4b57df7");
+        var defaultGameKey = await gameClient.GetOrCreateDefaultGameKey(GameId);
+        var testResult = await gameClient.TestFunctionAsync(GameId, FunctionId, request,
+            defaultGameKey.ApiKey);
+        
         return new JsonResult(testResult);
     }
 }
