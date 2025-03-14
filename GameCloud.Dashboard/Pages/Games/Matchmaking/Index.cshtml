@@ -1,0 +1,1536 @@
+@page "/game/{gameId:guid}/matchmaking"
+
+@model MatchmakingQueuesModel
+
+@{
+    Layout = "_GameLayout";
+}
+@Html.AntiForgeryToken()
+
+<div class="container-fluid">
+<!-- Page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+            <h4 class="mb-sm-0">Matchmaking Queues</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item">
+                        <a href="/games">Games</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="/game/@Model.GameId">@Model.Game.Name</a>
+                    </li>
+                    <li class="breadcrumb-item active">Matchmaking</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Active Queues</h6>
+                        @* <h2 class="mb-0">@Model.Stats.ActiveQueues</h2> *@
+                        <h2 class="mb-0">2</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                            <i class="ri-queue-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Active Matches (24h)</h6>
+                        @* <h2 class="mb-0">@Model.Stats.ActiveMatches</h2> *@
+                        <h2 class="mb-0">10</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-success-subtle text-success rounded fs-3">
+                            <i class="ri-team-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Avg Matchmaking Time</h6>
+                        @* <h2 class="mb-0">@Model.Stats.AvgMatchmakingTime.ToString("0.0")s</h2> *@
+                        <h2 class="mb-0">0.2s</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-warning-subtle text-warning rounded fs-3">
+                            <i class="ri-time-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Matchmaking Rate</h6>
+                        @* <h2 class="mb-0">@Model.Stats.MatchmakingSuccessRate.ToString("0.0")%</h2> *@
+                        <h2 class="mb-0">20%</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-info-subtle text-info rounded fs-3">
+                            <i class="ri-percent-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons Row -->
+<div class="row mb-4">
+    <div class="col-sm">
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createQueueModal">
+                <i class="ri-add-line align-bottom me-1"></i> Create Queue
+            </button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="ri-equalizer-line align-bottom me-1"></i> Filter
+                </button>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#"><input type="checkbox" class="me-2"> Show Disabled</a>
+                    <a class="dropdown-item" href="#"><input type="checkbox" class="me-2"> Show Empty Queues</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Clear Filters</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-auto">
+        <div class="d-flex gap-2">
+            <div class="search-box">
+                <form method="get" class="d-flex gap-2">
+                    <input type="text" class="form-control" name="search" value="@Model.Search"
+                           placeholder="Search queues...">
+                    <input type="hidden" name="pageSize" value="@Model.PageSize"/>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ri-search-line"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Queues Grid -->
+<div class="row g-4">
+    @foreach (var queue in Model.Queues.Items)
+    {
+        <div class="col-xxl-4 col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <!-- Queue Header -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div
+                                class="avatar-md bg-@Model.GetQueueTypeColor(queue.QueueType.ToString())-subtle text-@Model.GetQueueTypeColor(queue.QueueType.ToString()) rounded-circle">
+                                <i class="@Model.GetQueueTypeIcon(queue.QueueType.ToString()) fs-20"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="d-flex align-items-center">
+                                <h5 class="mb-1">@queue.Name</h5>
+                                <div class="form-check form-switch ms-auto">
+                                    <input class="form-check-input" type="checkbox"
+                                           data-action="toggle-queue"
+                                           data-queue-id="@queue.Id"
+                                           @(queue.IsEnabled ? "checked" : "")>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-0">
+                                <span
+                                    class="badge bg-@Model.GetQueueTypeColor(queue.QueueType.ToString())-subtle text-@Model.GetQueueTypeColor(queue.QueueType.ToString())">
+                                    @Model.GetQueueTypeName(queue.QueueType.ToString())
+                                </span>
+                                <span class="ms-2">@queue.MinPlayers - @queue.MaxPlayers players</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Queue Stats -->
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="p-2 border border-dashed rounded">
+                                <h5 class="mb-1" id="active-matches-@queue.Id">...</h5>
+                                <p class="text-muted mb-0 fs-12">Active Matches</p>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 border border-dashed rounded">
+                                <h5 class="mb-1" id="waiting-players-@queue.Id">...</h5>
+                                <p class="text-muted mb-0 fs-12">Waiting Players</p>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 border border-dashed rounded">
+                                <h5 class="mb-1" id="avg-wait-@queue.Id">...</h5>
+                                <p class="text-muted mb-0 fs-12">Avg Wait Time</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Queue Details -->
+                    <div class="mb-3 overflow-hidden">
+                        <h6 class="text-muted text-uppercase mb-3 fs-11">Queue Configuration</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    <span class="text-muted fs-12">Ticket TTL:</span>
+                                    <span class="fs-13 fw-medium">@queue.TicketTTL</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    <span class="text-muted fs-12">Turn Timeout:</span>
+                                    @* <span class="fs-13 fw-medium">@FormatTimeSpan(queue.TurnTimeout)</span> *@
+                                    1
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    <span class="text-muted fs-12">Match Timeout:</span>
+                                    @* <span class="fs-13 fw-medium">@FormatTimeSpan(queue.MatchTimeout)</span> *@
+                                    1
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    <span class="text-muted fs-12">Created:</span>
+                                    <span class="fs-13 fw-medium">@queue.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* @if (!string.IsNullOrEmpty(queue.Description)) *@
+                        @* { *@
+                        @*     <p class="text-muted fs-13 mt-2 mb-0">@queue.Description</p> *@
+                        @* } *@
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2">
+                        <a href="/game/@Model.GameId/matchmaking/@queue.Id"
+                           class="btn btn-sm btn-soft-primary flex-grow-1">
+                            <i class="ri-dashboard-line align-bottom me-1"></i> Queue Dashboard
+                        </a>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-icon btn-soft-secondary" data-bs-toggle="dropdown">
+                                <i class="ri-more-2-fill"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a class="dropdown-item" href="#"
+                                   data-action="edit"
+                                   data-queue-id="@queue.Id">
+                                    <i class="ri-pencil-line align-bottom me-2 text-muted"></i> Edit Queue
+                                </a>
+                                <a class="dropdown-item" href="/game/@Model.GameId/matchmaking/@queue.Id/matches">
+                                    <i class="ri-team-line align-bottom me-2 text-muted"></i> Active Matches
+                                </a>
+                                <a class="dropdown-item" href="/game/@Model.GameId/matchmaking/@queue.Id/logs">
+                                    <i class="ri-history-line align-bottom me-2 text-muted"></i> Logs & Analytics
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item text-danger" href="#"
+                                   data-action="delete"
+                                   data-queue-id="@queue.Id"
+                                   data-queue-name="@queue.Name">
+                                    <i class="ri-delete-bin-line align-bottom me-2"></i> Delete Queue
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Empty State -->
+@if (!Model.Queues.Items.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-5">
+                    <div class="text-center">
+                        <div class="avatar-lg mx-auto mb-4">
+                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                                <i class="ri-gamepad-line"></i>
+                            </div>
+                        </div>
+                        <h5>No Matchmaking Queues Found</h5>
+                        <p class="text-muted mb-4">
+                            Create your first matchmaking queue to get started with
+                            multiplayer!
+                        </p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#createQueueModal">
+                            <i class="ri-add-line align-bottom me-1"></i> Create Queue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Pagination -->
+@if (Model.Queues.Items.Any() && Model.Queues.Pages > 1)
+{
+    <div class="row align-items-center mt-4">
+        <div class="col-sm text-muted">
+            Showing @((Model.Queues.Index * Model.Queues.Size) + 1) to
+            @Math.Min((Model.Queues.Index + 1) * Model.Queues.Size, Model.Queues.Count)
+            of @Model.Queues.Count queues
+        </div>
+        <div class="col-sm-auto">
+            <ul class="pagination mb-0">
+                <li class="page-item @(!Model.Queues.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" href="@Model.GetPageUrl(Model.Queues.Index - 1)">
+                        <i class="ri-arrow-left-s-line"></i>
+                    </a>
+                </li>
+                @for (int i = 0; i < Model.Queues.Pages; i++)
+                {
+                    <li class="page-item @(Model.Queues.Index == i ? "active" : "")">
+                        <a class="page-link" href="@Model.GetPageUrl(i)">@(i + 1)</a>
+                    </li>
+                }
+                <li class="page-item @(!Model.Queues.HasNextPage ? "disabled" : "")">
+                    <a class="page-link" href="@Model.GetPageUrl(Model.Queues.Index + 1)">
+                        <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+}
+</div>
+
+<!-- Create Queue Modal -->
+<div class="modal fade" id="createQueueModal" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+    <h5 class="modal-title" id="queueModalTitle">Create Matchmaking Queue</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+<!-- Multi-step wizard form -->
+<div id="queueWizard" class="bs-stepper">
+<div class="bs-stepper-header mb-4">
+    <div class="step" data-target="#queue-details">
+        <button type="button" class="step-trigger">
+            <span class="bs-stepper-circle">1</span>
+            <span class="bs-stepper-label">Basic Info</span>
+        </button>
+    </div>
+    <div class="bs-stepper-line"></div>
+    <div class="step" data-target="#match-config">
+        <button type="button" class="step-trigger">
+            <span class="bs-stepper-circle">2</span>
+            <span class="bs-stepper-label">Match Config</span>
+        </button>
+    </div>
+    <div class="bs-stepper-line"></div>
+    <div class="step" data-target="#matchmaker-functions">
+        <button type="button" class="step-trigger">
+            <span class="bs-stepper-circle">3</span>
+            <span class="bs-stepper-label">Functions</span>
+        </button>
+    </div>
+</div>
+
+<div class="bs-stepper-content p-0">
+<form id="queueForm" method="post">
+@Html.AntiForgeryToken()
+<input type="hidden" id="queueId" name="Id" value="">
+<input type="hidden" name="GameId" value="@Model.GameId">
+
+<!-- Step 1: Basic Info -->
+<div id="queue-details" class="content">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label">
+                    Queue Name
+                    <span
+                        class="text-danger">
+                        *
+                    </span>
+                </label>
+                <input type="text" class="form-control" name="Name" required
+                       placeholder="e.g., Casual_1v1" maxlength="50">
+                <div class="form-text">Unique identifier for this queue</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label">
+                    Queue Type
+                    <span
+                        class="text-danger">
+                        *
+                    </span>
+                </label>
+                <select class="form-select" name="QueueType" required id="queueTypeSelect">
+                    <option value="TurnBased">Turn-Based</option>
+                    <option value="Simultaneous">Simultaneous</option>
+                    <option value="Asynchronous">Asynchronous</option>
+                </select>
+                <div class="form-text">Determines match flow and timing mechanics</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" name="Description" rows="2"
+                                              placeholder="Brief description of this queue"></textarea>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label">
+                    Min Players
+                    <span
+                        class="text-danger">
+                        *
+                    </span>
+                </label>
+                <input type="number" class="form-control" name="MinPlayers"
+                       min="1" max="64" value="2" required>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label">
+                    Max Players
+                    <span
+                        class="text-danger">
+                        *
+                    </span>
+                </label>
+                <input type="number" class="form-control" name="MaxPlayers"
+                       min="2" max="64" value="2" required>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="IsEnabled" checked>
+            <label class="form-check-label">Enable Queue</label>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-4">
+        <button type="button" class="btn btn-primary" onclick="queueWizard.next()">
+            Next <i class="ri-arrow-right-line ms-1"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Step 2: Match Config -->
+<div id="match-config" class="content">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label class="form-label">
+                    Ticket TTL
+                    <span
+                        class="text-danger">
+                        *
+                    </span>
+                </label>
+                <div class="input-group">
+                    <input type="number" class="form-control" name="TicketTTLSeconds"
+                           min="10" max="1800" value="300" required>
+                    <span class="input-group-text">seconds</span>
+                </div>
+                <div class="form-text">How long matchmaking tickets are valid</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label class="form-label">Turn Timeout</label>
+                <div class="input-group">
+                    <input type="number" class="form-control" name="TurnTimeoutSeconds"
+                           min="0" max="604800" value="86400">
+                    <span class="input-group-text">seconds</span>
+                </div>
+                <div class="form-text">Max time for player turns (0 = no limit)</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label class="form-label">Match Timeout</label>
+                <div class="input-group">
+                    <input type="number" class="form-control" name="MatchTimeoutSeconds"
+                           min="0" max="2592000" value="604800">
+                    <span class="input-group-text">seconds</span>
+                </div>
+                <div class="form-text">Total match duration (0 = no limit)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Matchmaking Rules (JSON)</label>
+        <div id="rulesEditor" style="height: 200px; border: 1px solid #e9ebec;"></div>
+        <input type="hidden" name="Rules" id="rulesInput">
+        <div class="form-text">Define custom matchmaking criteria and properties</div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-light" onclick="queueWizard.previous()">
+            <i class="ri-arrow-left-line me-1"></i> Previous
+        </button>
+        <button type="button" class="btn btn-primary" onclick="queueWizard.next()">
+            Next <i class="ri-arrow-right-line ms-1"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Step 3: Match Functions -->
+<div id="matchmaker-functions" class="content">
+    <div class="alert alert-info" role="alert">
+        <i class="ri-information-line me-2"></i>
+        <span id="matchFunctionsInfo">Connect your Cloud Functions to handle match lifecycle events.</span>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label">
+            <span class="badge bg-danger me-1">Required</span>
+            Match Initialization Function
+        </label>
+        <select class="form-select" name="MatchInitializeFunction" required>
+            <option value="">Select a function...</option>
+            @foreach (var func in Model.AvailableFunctions)
+            {
+                <option value="@func.Id">@func.Name (@func.ActionType)</option>
+            }
+        </select>
+        <div class="form-text">
+            Called when a match is created. Must return initial match
+            state.
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label">
+            <span class="badge bg-danger me-1">Required</span>
+            Match Transition Function
+        </label>
+        <select class="form-select" name="MatchTransitionFunction" required>
+            <option value="">Select a function...</option>
+            @foreach (var func in Model.AvailableFunctions)
+            {
+                <option value="@func.Id">@func.Name (@func.ActionType)</option>
+            }
+        </select>
+        <div class="form-text">
+            Called when a player submits an action. Updates match
+            state.
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label">
+            <span class="badge bg-secondary me-1">Optional</span>
+            Match Leave Function
+        </label>
+        <select class="form-select" name="MatchLeaveFunction">
+            <option value="">Select a function...</option>
+            @foreach (var func in Model.AvailableFunctions)
+            {
+                <option value="@func.Id">@func.Name (@func.ActionType)</option>
+            }
+        </select>
+        <div class="form-text">Called when a player leaves the match.</div>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label">
+            <span class="badge bg-secondary me-1">Optional</span>
+            Match End Function
+        </label>
+        <select class="form-select" name="MatchEndFunction">
+            <option value="">Select a function...</option>
+            @foreach (var func in Model.AvailableFunctions)
+            {
+                <option value="@func.Id">@func.Name (@func.ActionType)</option>
+            }
+        </select>
+        <div class="form-text">Called when a match completes or is cancelled.</div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-light" onclick="queueWizard.previous()">
+            <i class="ri-arrow-left-line me-1"></i> Previous
+        </button>
+        <button type="submit" class="btn btn-success">
+            <i class="ri-check-line me-1"></i> Create Queue
+        </button>
+    </div>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Create Queue Modal -->
+<div class="modal fade" id="createQueueModal" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+    <h5 class="modal-title" id="queueModalTitle">Create Matchmaking Queue</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+<!-- Multi-step wizard form -->
+<div id="queueWizard" class="bs-stepper">
+<div class="bs-stepper-header mb-4">
+    <div class="step" data-target="#queue-details">
+        <button type="button" class="step-trigger">
+            <span class="bs-stepper-circle">
+                <i class="ri-settings-3-line"></i>
+            </span>
+            <span class="bs-stepper-label">Basic Info</span>
+        </button>
+    </div>
+    <div class="bs-stepper-line"></div>
+    <div class="step" data-target="#match-config">
+        <button type="button" class="step-trigger">
+            <span class="bs-stepper-circle">
+                <i class="ri-timer-line"></i>
+            </span>
+            <span class="bs-stepper-label">Match Rules</span>
+        </button>
+    </div>
+    <div class="bs-stepper-line"></div>
+    <div class="step" data-target="#matchmaker-functions">
+        <button type="button" class="step-trigger">
+            <span class="bs-stepper-circle">
+                <i class="ri-function-line"></i>
+            </span>
+            <span class="bs-stepper-label">Functions</span>
+        </button>
+    </div>
+</div>
+
+<div class="bs-stepper-content p-0">
+<form id="queueForm" method="post" onsubmit="return validateQueueForm()">
+@Html.AntiForgeryToken()
+<input type="hidden" id="queueId" name="Id" value="">
+<input type="hidden" name="GameId" value="@Model.GameId">
+<input type="hidden" id="rulesInput" name="Rules">
+
+<!-- Step 1: Basic Info -->
+<div id="queue-details" class="content">
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <label class="form-label">Queue Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="Name" id="queueName" required
+                   placeholder="e.g., Casual_1v1" maxlength="50">
+            <div class="form-text">
+                A unique identifier for this queue. Use alphanumeric
+                characters and underscores.
+            </div>
+            <div class="invalid-feedback">Please provide a valid queue name.</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="Description" id="queueDescription" rows="2"
+                                                  placeholder="Brief description of this queue's purpose (optional)"></textarea>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Queue Type <span class="text-danger">*</span></label>
+            <div class="input-group">
+                <span class="input-group-text bg-light">
+                    <i id="queueTypeIcon" class="ri-clockwise-line"></i>
+                </span>
+                <select class="form-select" name="QueueType" id="queueTypeSelect" required>
+                    <option value="TurnBased" selected>Turn-Based</option>
+                    <option value="Simultaneous">Simultaneous</option>
+                    <option value="Asynchronous">Asynchronous</option>
+                </select>
+            </div>
+            <div class="mt-2">
+                <div id="queueTypeDescription" class="form-text">
+                    Players take turns making moves. Ideal for strategy games and board
+                    games.
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="row">
+                <div class="col">
+                    <label class="form-label">Min Players <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" name="MinPlayers"
+                           id="minPlayers"
+                           min="1" max="64" value="2" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">Max Players <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" name="MaxPlayers"
+                           id="maxPlayers"
+                           min="2" max="64" value="2" required>
+                </div>
+            </div>
+            <div class="mt-2">
+                <div id="playerCountInfo" class="form-text">
+                    Matches will start when min players join and support up to max players.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-light border mt-3">
+        <div class="d-flex">
+            <div class="flex-shrink-0">
+                <i class="ri-information-line text-primary fs-18 align-middle me-2"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div id="queueTypeSummary">
+                    <h6>Turn-Based Queue</h6>
+                    <p class="mb-0">
+                        Players take actions in sequence. Each player receives a
+                        notification when it's their turn to act. Matches can last for
+                        extended periods as players may not be online simultaneously.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="IsEnabled"
+                   id="queueEnabled" checked>
+            <label class="form-check-label" for="queueEnabled">Enable Queue</label>
+            <div class="form-text">
+                When enabled, players can join this queue immediately.
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-4">
+        <button type="button" class="btn btn-primary" onclick="validateAndGoNext(0)">
+            Next <i class="ri-arrow-right-line ms-1"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Step 2: Match Config -->
+<div id="match-config" class="content">
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Ticket TTL <span class="text-danger">*</span></label>
+            <div class="input-group">
+                <input type="number" class="form-control" name="TicketTTLSeconds"
+                       id="ticketTTL"
+                       min="10" max="1800" value="300" required>
+                <span class="input-group-text">seconds</span>
+            </div>
+            <div class="form-text">Maximum time a player waits for matchmaking</div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Turn Timeout</label>
+            <div class="input-group">
+                <input type="number" class="form-control" name="TurnTimeoutSeconds"
+                       id="turnTimeout"
+                       min="0" max="604800" value="86400">
+                <span class="input-group-text">seconds</span>
+            </div>
+            <div class="form-text">Maximum time for each turn (0 = no limit)</div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Match Timeout</label>
+            <div class="input-group">
+                <input type="number" class="form-control" name="MatchTimeoutSeconds"
+                       id="matchTimeout"
+                       min="0" max="2592000" value="604800">
+                <span class="input-group-text">seconds</span>
+            </div>
+            <div class="form-text">Total match duration (0 = no limit)</div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12">
+            <label class="form-label">
+                Matchmaking Rules
+                <i
+                    class="ri-question-line text-muted" data-bs-toggle="tooltip"
+                    title="Define matchmaking criteria and match properties">
+                </i>
+            </label>
+            <div id="rulesEditor" style="height: 300px; border: 1px solid #e9ebec;"></div>
+            <div class="d-flex justify-content-end mt-2">
+                <button type="button" class="btn btn-sm btn-light" onclick="formatJson()">
+                    <i class="ri-code-line"></i> Format JSON
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-light border">
+        <div class="d-flex">
+            <div class="flex-shrink-0">
+                <i class="ri-information-line text-primary fs-18 align-middle me-2"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6>Matchmaking Rules</h6>
+                <p class="mb-0">
+                    Rules control how players are matched together. You can
+                    define skill ranges, team formations, and other criteria. The default
+                    rules provide balanced matching based on your queue type.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-light" onclick="queueWizard.previous()">
+            <i class="ri-arrow-left-line me-1"></i> Previous
+        </button>
+        <button type="button" class="btn btn-primary" onclick="validateAndGoNext(1)">
+            Next <i class="ri-arrow-right-line ms-1"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Step 3: Match Functions -->
+<div id="matchmaker-functions" class="content">
+    <div class="alert alert-primary" role="alert">
+        <div class="d-flex">
+            <div class="flex-shrink-0">
+                <i class="ri-information-line fs-18 align-middle me-2"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6>Connect Cloud Functions</h6>
+                <p class="mb-0" id="matchFunctionsInfo">
+                    These functions handle match
+                    lifecycle events and game logic. At minimum, you need initialization and
+                    transition functions.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-danger me-2">Required</span>
+            <label class="form-label mb-0">Match Initialization Function</label>
+        </div>
+        <select class="form-select" name="InitializeFunctionId" id="initializeFunction"
+                required>
+            <option value="">Select a function...</option>
+            @foreach (var func in Model.AvailableFunctions)
+            {
+                <option value="@func.Id">@func.Name (@func.ActionType)</option>
+            }
+        </select>
+        <div class="form-text">
+            <i class="ri-play-circle-line me-1 text-muted"></i>
+            Called when a match is created. Initializes match state and player positions.
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-danger me-2">Required</span>
+            <label class="form-label mb-0">Match Transition Function</label>
+        </div>
+        <select class="form-select" name="TransitionFunctionId" id="transitionFunction"
+                required>
+            <option value="">Select a function...</option>
+            @foreach (var func in Model.AvailableFunctions)
+            {
+                <option value="@func.Id">@func.Name (@func.ActionType)</option>
+            }
+        </select>
+        <div class="form-text">
+            <i class="ri-refresh-line me-1 text-muted"></i>
+            Called when a player submits an action. Validates moves and updates match state.
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-secondary me-2">Optional</span>
+            <label class="form-label mb-0">Match Leave Function</label>
+        </div>
+        <select class="form-select" name="LeaveFunctionId" id="leaveFunction">
+            <option value="">Select a function...</option>
+            @foreach (var func in Model.AvailableFunctions)
+            {
+                <option value="@func.Id">@func.Name (@func.ActionType)</option>
+            }
+        </select>
+        <div class="form-text">
+            <i class="ri-logout-box-line me-1 text-muted"></i>
+            Called when a player leaves a match. Handles player disconnection logic.
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-secondary me-2">Optional</span>
+            <label class="form-label mb-0">Match End Function</label>
+        </div>
+        <select class="form-select" name="EndFunctionId" id="endFunction">
+            <option value="">Select a function...</option>
+            @foreach (var func in Model.AvailableFunctions)
+            {
+                <option value="@func.Id">@func.Name (@func.ActionType)</option>
+            }
+        </select>
+        <div class="form-text">
+            <i class="ri-stop-circle-line me-1 text-muted"></i>
+            Called when a match completes. Handles match finalization and rewards.
+        </div>
+    </div>
+
+    <div class="alert alert-light border">
+        <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+                <i class="ri-lightbulb-line text-warning fs-18 align-middle me-2"></i>
+            </div>
+            <div class="flex-grow-1">
+                <p class="mb-0">
+                    Don't have the functions you need?
+                    <a href="/game/@Model.GameId/functions" class="fw-medium">
+                        Create new
+                        functions
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-light" onclick="queueWizard.previous()">
+            <i class="ri-arrow-left-line me-1"></i> Previous
+        </button>
+        <button type="submit" class="btn btn-success" id="submitButton">
+            <i class="ri-check-line me-1"></i> Create Queue
+        </button>
+    </div>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bs-stepper/dist/js/bs-stepper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+    <script>
+    // Initialize stepper
+    let queueWizard;
+    let rulesEditor;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Fix for modal content display issues
+        const modalElement = document.getElementById('createQueueModal');
+        if (modalElement) {
+            modalElement.addEventListener('shown.bs.modal', function () {
+                // Force content visibility
+                const contentElements = document.querySelectorAll('.bs-stepper-content .content');
+                contentElements.forEach(element => {
+                    if (element.id === 'queue-details') {
+                        element.classList.add('active', 'dblock');
+                    } else {
+                        element.classList.remove('active', 'dblock');
+                    }
+                });
+
+                // Force repaint
+                const stepperContent = document.querySelector('.bs-stepper-content');
+                if (stepperContent) {
+                    stepperContent.style.display = 'none';
+                    setTimeout(() => {
+                        stepperContent.style.display = 'block';
+                    }, 10);
+                }
+            });
+        }
+
+
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize stepper
+        queueWizard = new Stepper(document.querySelector('#queueWizard'), {
+            linear: true,
+            animation: true
+        });
+
+        // Initialize modal properly
+        const modalElement = document.getElementById('createQueueModal');
+        const modal = new bootstrap.Modal(modalElement);
+
+        // Fix for modal content display issues
+        modalElement.addEventListener('shown.bs.modal', function() {
+            // Reset stepper to first step when modal opens
+            if (queueWizard) {
+                queueWizard.to(0);
+            }
+
+            // Force content visibility
+            const contentElements = document.querySelectorAll('.bs-stepper-content .content');
+            contentElements.forEach(element => {
+                if (element.id === 'queue-details') {
+                    element.classList.add('active', 'dblock');
+                } else {
+                    element.classList.remove('active', 'dblock');
+                }
+            });
+
+            // Force stepper content repaint
+            const stepperContent = document.querySelector('.bs-stepper-content');
+            if (stepperContent) {
+                stepperContent.style.display = 'none';
+                requestAnimationFrame(() => {
+                    stepperContent.style.display = 'block';
+                });
+            }
+        });
+
+        // Add modal backdrop fix
+        modalElement.addEventListener('hide.bs.modal', function() {
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        });
+    });
+
+    // Form validation functions
+    function validateAndGoNext(step) {
+        // Store form data in each step
+        if (step === 0) {
+            if (!validateBasicInfo()) return;
+        } else if (step === 1) {
+            if (!validateMatchConfig()) return;
+        }
+
+        queueWizard.next();
+    }
+
+    function validateBasicInfo() {
+        const queueName = document.getElementById('queueName');
+        const minPlayers = document.getElementById('minPlayers');
+        const maxPlayers = document.getElementById('maxPlayers');
+
+        // Queue name validation - alphanumeric with underscores
+        const nameRegex = /^[a-zA-Z0-9_]+$/;
+        if (!nameRegex.test(queueName.value)) {
+            queueName.classList.add('is-invalid');
+            return false;
+        } else {
+            queueName.classList.remove('is-invalid');
+        }
+
+        // Player count validation
+        if (parseInt(minPlayers.value) > parseInt(maxPlayers.value)) {
+            maxPlayers.classList.add('is-invalid');
+            return false;
+        } else {
+            maxPlayers.classList.remove('is-invalid');
+        }
+
+        return true;
+    }
+
+    function validatePlayerCounts() {
+        const minPlayers = document.getElementById('minPlayers');
+        const maxPlayers = document.getElementById('maxPlayers');
+        const playerCountInfo = document.getElementById('playerCountInfo');
+
+        if (parseInt(minPlayers.value) > parseInt(maxPlayers.value)) {
+            maxPlayers.classList.add('is-invalid');
+            playerCountInfo.innerHTML = '<span class="text-danger">Maximum players must be greater than or equal to minimum players</span>';
+        } else {
+            maxPlayers.classList.remove('is-invalid');
+            playerCountInfo.innerHTML = 'Matches will start when min players join and support up to max players.';
+        }
+    }
+
+    function validateMatchConfig() {
+        const ticketTTL = document.getElementById('ticketTTL');
+        const turnTimeout = document.getElementById('turnTimeout');
+        const matchTimeout = document.getElementById('matchTimeout');
+
+        // Validate JSON in rules editor
+        try {
+            const rules = JSON.parse(rulesEditor.getValue());
+            // If we got here, JSON is valid
+            document.getElementById('rulesInput').value = rulesEditor.getValue();
+            return true;
+        } catch (e) {
+            alert('Invalid JSON in matchmaking rules. Please correct the format.');
+            return false;
+        }
+    }
+
+    function validateQueueForm() {
+        // Final validation before submission
+        if (!validateBasicInfo()) {
+            queueWizard.to(0);
+            return false;
+        }
+
+        if (!validateMatchConfig()) {
+            queueWizard.to(1);
+            return false;
+        }
+
+        // Validate required functions
+        const initializeFunction = document.getElementById('initializeFunction');
+        const transitionFunction = document.getElementById('transitionFunction');
+
+        if (!initializeFunction.value || !transitionFunction.value) {
+            alert('Match initialization and transition functions are required.');
+            return false;
+        }
+
+        // All validations passed
+        const submitButton = document.getElementById('submitButton');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+        return true;
+    }
+
+    // Queue type related functions
+    function updateQueueTypeInfo() {
+        const queueType = document.getElementById('queueTypeSelect').value;
+        const queueTypeIcon = document.getElementById('queueTypeIcon');
+        const queueTypeDescription = document.getElementById('queueTypeDescription');
+        const queueTypeSummary = document.getElementById('queueTypeSummary');
+
+        // Update icon
+        queueTypeIcon.className = GetQueueTypeIcon(queueType);
+
+        // Update description
+        switch (queueType) {
+            case 'TurnBased':
+                queueTypeDescription.innerHTML = 'Players take turns making moves. Ideal for strategy games and board games.';
+                queueTypeSummary.innerHTML = `
+                    <h6>Turn-Based Queue</h6>
+                    <p class="mb-0">Players take actions in sequence. Each player receives a notification when it's their turn to act. 
+                    Matches can last for extended periods as players may not be online simultaneously.</p>
+                `;
+                break;
+            case 'Simultaneous':
+                queueTypeDescription.innerHTML = 'All players act at the same time. Best for real-time competitive games.';
+                queueTypeSummary.innerHTML = `
+                    <h6>Simultaneous Queue</h6>
+                    <p class="mb-0">All players must be online at the same time. Actions are processed in real-time.
+                    Ideal for fast-paced gameplay where all participants play concurrently.</p>
+                `;
+                break;
+            case 'Asynchronous':
+                queueTypeDescription.innerHTML = 'Players can join and leave at different times. Good for casual games.';
+                queueTypeSummary.innerHTML = `
+                    <h6>Asynchronous Queue</h6>
+                    <p class="mb-0">Players can participate on their own schedule. The game state persists between sessions,
+                    allowing for long-running matches with minimal time pressure.</p>
+                `;
+                break;
+        }
+
+        // Update match functions info
+        updateMatchFunctionsInfo(queueType);
+    }
+
+    function updateMatchFunctionsInfo(queueType) {
+        const matchFunctionsInfo = document.getElementById('matchFunctionsInfo');
+
+        switch (queueType) {
+            case 'TurnBased':
+                matchFunctionsInfo.innerHTML = 'Connect functions to manage turn-based gameplay. Your initialize function should set up the game board and turn order.';
+                break;
+            case 'Simultaneous':
+                matchFunctionsInfo.innerHTML = 'Connect functions for real-time gameplay. Your transition function should handle concurrent player actions and resolve conflicts.';
+                break;
+            case 'Asynchronous':
+                matchFunctionsInfo.innerHTML = 'Connect functions that support disconnection and reconnection. Your functions should maintain game state between sessions.';
+                break;
+        }
+    }
+
+    function updateRulesTemplate() {
+        const queueType = document.getElementById('queueTypeSelect').value;
+        let defaultRules = {};
+
+        switch (queueType) {
+            case 'TurnBased':
+                defaultRules = {
+                    "matchCriteria": {
+                        "skillRange": 100,
+                        "maxWaitTimeSeconds": 60
+                    },
+                    "teamConfig": {
+                        "teamsCount": 2,
+                        "playersPerTeam": 1
+                    },
+                    "turnConfig": {
+                        "firstTurnAssignment": "random",
+                        "turnNotificationType": "push"
+                    }
+                };
+                break;
+            case 'Simultaneous':
+                defaultRules = {
+                    "matchCriteria": {
+                        "skillRange": 150,
+                        "regionPriority": ["na-east", "na-west", "eu"]
+                    },
+                    "teamConfig": {
+                        "teamsCount": 2,
+                        "playersPerTeam": 2,
+                        "balanceSkill": true
+                    }
+                };
+                break;
+            case 'Asynchronous':
+                defaultRules = {
+                    "matchCriteria": {
+                        "maxWaitTimeSeconds": 1800,
+                        "skillRange": 200
+                    },
+                    "teamConfig": {
+                        "teamsCount": 2,
+                        "playersPerTeam": 1
+                    },
+                    "asyncConfig": {
+                        "inactivityTimeoutHours": 48,
+                        "remindersEnabled": true
+                    }
+                };
+                break;
+        }
+
+        rulesEditor.setValue(JSON.stringify(defaultRules, null, 2));
+    }
+
+    function formatJson() {
+        try {
+            const rules = JSON.parse(rulesEditor.getValue());
+            rulesEditor.setValue(JSON.stringify(rules, null, 2));
+        } catch (e) {
+            alert('Invalid JSON. Cannot format.');
+        }
+    }
+
+    // API interaction functions
+    function loadQueueStats() {
+        const queueElements = document.querySelectorAll('[id^="active-matches-"]');
+        const queueIds = Array.from(queueElements).map(el =>
+            el.id.replace('active-matches-', '')
+        );
+
+        if (queueIds.length === 0) return;
+
+        fetch(`/api/games/@Model.GameId/matchmaking/stats?queueIds=${queueIds.join(',')}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch queue stats');
+                return response.json();
+            })
+            .then(data => {
+                data.forEach(stat => {
+                    const queueId = stat.queueId;
+                    // Update queue stats
+                    const activeMatches = document.getElementById(`active-matches-${queueId}`);
+                    const waitingPlayers = document.getElementById(`waiting-players-${queueId}`);
+                    const avgWait = document.getElementById(`avg-wait-${queueId}`);
+
+                    if (activeMatches) activeMatches.textContent = stat.activeMatches || 0;
+                    if (waitingPlayers) waitingPlayers.textContent = stat.waitingPlayers || 0;
+                    if (avgWait) avgWait.textContent = stat.avgWaitTimeSeconds ?
+                        `${stat.avgWaitTimeSeconds.toFixed(1)}s` : '0.0s';
+                });
+            })
+            .catch(error => {
+                console.error('Error loading queue stats:', error);
+                // Set fallback values for all stats elements
+                queueElements.forEach(el => {
+                    const queueId = el.id.replace('active-matches-', '');
+                    document.getElementById(`active-matches-${queueId}`).textContent = '0';
+                    document.getElementById(`waiting-players-${queueId}`).textContent = '0';
+                    document.getElementById(`avg-wait-${queueId}`).textContent = '0.0s';
+                });
+            });
+
+        // Update stats every 30 seconds
+        setTimeout(loadQueueStats, 30000);
+    }
+
+    // Toggle queue active state
+    document.addEventListener('change', function (e) {
+        if (e.target.dataset.action === 'toggle-queue') {
+            const queueId = e.target.dataset.queueId;
+            const isEnabled = e.target.checked;
+            const originalState = !isEnabled;
+
+            fetch(`/api/games/@Model.GameId/matchmaking/queues/${queueId}/toggle`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({isEnabled})
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to toggle queue state');
+                    return response.json();
+                })
+                .then(data => {
+                    // Show toast notification
+                    showToast(`Queue ${isEnabled ? 'enabled' : 'disabled'} successfully`, 'success');
+                })
+                .catch(error => {
+                    console.error('Error toggling queue:', error);
+                    // Revert checkbox state on error
+                    e.target.checked = originalState;
+                    showToast('Failed to update queue status', 'danger');
+                });
+        }
+    });
+
+    // Edit queue handler
+    document.addEventListener('click', function (e) {
+        if (e.target.dataset.action === 'edit' || e.target.parentElement && e.target.parentElement.dataset.action === 'edit') {
+            const element = e.target.dataset.action ? e.target : e.target.parentElement;
+            const queueId = element.dataset.queueId;
+
+            // Update modal title
+            document.getElementById('queueModalTitle').textContent = 'Edit Matchmaking Queue';
+            document.getElementById('submitButton').innerHTML = '<i class="ri-save-line me-1"></i> Update Queue';
+
+            // Load queue data
+            fetch(`/api/games/@Model.GameId/matchmaking/queues/${queueId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load queue data');
+                    return response.json();
+                })
+                .then(queue => {
+                    // Update form fields
+                    document.getElementById('queueId').value = queue.id;
+                    document.getElementById('queueName').value = queue.name;
+                    document.getElementById('queueDescription').value = queue.description || '';
+                    document.getElementById('queueTypeSelect').value = queue.queueType;
+                    document.getElementById('minPlayers').value = queue.minPlayers;
+                    document.getElementById('maxPlayers').value = queue.maxPlayers;
+                    document.getElementById('queueEnabled').checked = queue.isEnabled;
+
+                    // Update timeouts
+                    document.getElementById('ticketTTL').value = queue.ticketTTL || 300;
+                    document.getElementById('turnTimeout').value = queue.turnTimeoutSeconds || 86400;
+                    document.getElementById('matchTimeout').value = queue.matchTimeoutSeconds || 604800;
+
+                    // Update rules
+                    rulesEditor.setValue(JSON.stringify(queue.rules || {}, null, 2));
+
+                    // Update functions
+                    if (queue.initializeFunctionId) {
+                        document.getElementById('initializeFunction').value = queue.initializeFunctionId;
+                    }
+                    if (queue.transitionFunctionId) {
+                        document.getElementById('transitionFunction').value = queue.transitionFunctionId;
+                    }
+                    if (queue.leaveFunctionId) {
+                        document.getElementById('leaveFunction').value = queue.leaveFunctionId;
+                    }
+                    if (queue.endFunctionId) {
+                        document.getElementById('endFunction').value = queue.endFunctionId;
+                    }
+
+                    // Update queue type display
+                    updateQueueTypeInfo();
+
+                    // Change form submission URL
+                    document.getElementById('queueForm').action = '?handler=Update';
+
+                    // Show modal
+                    queueWizard.to(0);
+                    new bootstrap.Modal(document.getElementById('createQueueModal')).show();
+                })
+                .catch(error => {
+                    console.error('Error loading queue details:', error);
+                    showToast('Failed to load queue details', 'danger');
+                });
+        }
+    });
+
+    // Delete queue handler
+    document.addEventListener('click', function (e) {
+        if (e.target.dataset.action === 'delete' || e.target.parentElement && e.target.parentElement.dataset.action === 'delete') {
+            const element = e.target.dataset.action ? e.target : e.target.parentElement;
+            const queueId = element.dataset.queueId;
+            const queueName = element.dataset.queueName;
+
+            if (confirm(`Are you sure you want to delete the queue "${queueName}"? This action cannot be undone.`)) {
+                fetch(`/api/games/@Model.GameId/matchmaking/queues/${queueId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Failed to delete queue');
+                        return response.json();
+                    })
+                    .then(data => {
+                        showToast('Queue deleted successfully', 'success');
+                        // Reload page after short delay
+                        setTimeout(() => window.location.reload(), 1000);
+                    })
+                    .catch(error => {
+                        console.error('Error deleting queue:', error);
+                        showToast('Failed to delete queue', 'danger');
+                    });
+            }
+        }
+    });
+
+    // Helper functions
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container') || createToastContainer();
+        const toastId = 'toast-' + Date.now();
+
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center border-0 bg-${type}" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="ri-${type === 'success' ? 'check-double-line' : type === 'danger' ? 'error-warning-line' : 'information-line'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, {autohide: true, delay: 3000});
+        toast.show();
+
+        // Remove toast after it's hidden
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    }
+
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = "1090";
+        document.body.appendChild(container);
+        return container;
+    }
+
+    // Utility functions referenced in HTML
+    function GetQueueTypeName(queueType) {
+        switch (queueType) {
+            case 'TurnBased':
+                return 'Turn-Based';
+            case 'Simultaneous':
+                return 'Simultaneous';
+            case 'Asynchronous':
+                return 'Asynchronous';
+            default:
+                return queueType;
+        }
+    }
+
+    function GetQueueTypeColor(queueType) {
+        switch (queueType) {
+            case 'TurnBased':
+                return 'primary';
+            case 'Simultaneous':
+                return 'success';
+            case 'Asynchronous':
+                return 'info';
+            default:
+                return 'secondary';
+        }
+    }
+
+    function GetQueueTypeIcon(queueType) {
+        switch (queueType) {
+            case 'TurnBased':
+                return 'ri-clockwise-line';
+            case 'Simultaneous':
+                return 'ri-group-line';
+            case 'Asynchronous':
+                return 'ri-time-line';
+            default:
+                return 'ri-gamepad-line';
+        }
+    }
+
+    function FormatTimeSpan(timeSpan) {
+        if (!timeSpan) return 'None';
+
+        const totalSeconds = timeSpan.totalSeconds || 0;
+        if (totalSeconds === 0) return 'None';
+
+        if (totalSeconds < 60) return `${totalSeconds}s`;
+        if (totalSeconds < 3600) return `${Math.floor(totalSeconds / 60)}m`;
+        if (totalSeconds < 86400) return `${Math.floor(totalSeconds / 3600)}h`;
+        return `${Math.floor(totalSeconds / 86400)}d`;
+    }
+</script>
+}
