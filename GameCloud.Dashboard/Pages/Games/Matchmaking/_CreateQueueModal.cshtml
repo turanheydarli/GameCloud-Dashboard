@@ -1,2 +1,355 @@
-@model TModel
+@model MatchmakingQueuesModel
 
+<div class="modal fade" id="createQueueModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="queueModalTitle">Create Matchmaking Queue</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Multi-step wizard form -->
+                <div id="queueWizard" class="bs-stepper">
+                    <div class="bs-stepper-header mb-4">
+                        <div class="step" data-target="#queue-details">
+                            <button type="button" class="step-trigger">
+                                <span class="bs-stepper-circle">
+                                    <i class="ri-settings-3-line"></i>
+                                </span>
+                                <span class="bs-stepper-label">Basic Info</span>
+                            </button>
+                        </div>
+                        <div class="bs-stepper-line"></div>
+                        <div class="step" data-target="#match-config">
+                            <button type="button" class="step-trigger">
+                                <span class="bs-stepper-circle">
+                                    <i class="ri-timer-line"></i>
+                                </span>
+                                <span class="bs-stepper-label">Match Rules</span>
+                            </button>
+                        </div>
+                        <div class="bs-stepper-line"></div>
+                        <div class="step" data-target="#matchmaker-functions">
+                            <button type="button" class="step-trigger">
+                                <span class="bs-stepper-circle">
+                                    <i class="ri-function-line"></i>
+                                </span>
+                                <span class="bs-stepper-label">Functions</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bs-stepper-content p-0">
+                        <form id="queueForm" method="post" onsubmit="return validateQueueForm()">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" id="queueId" name="Id" value="">
+                            <input type="hidden" name="GameId" value="@Model.GameId">
+                            <input type="hidden" name="GameKey" value="@Model.DefaultGameKey.ApiKey">
+                            <input type="hidden" id="rulesInput" name="Rules">
+
+                            <!-- Step 1: Basic Info -->
+                            <div id="queue-details" class="content">
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Queue Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="Name" id="queueName" required
+                                            placeholder="e.g., Casual_1v1" maxlength="50">
+                                        <div class="form-text">
+                                            A unique identifier for this queue. Use alphanumeric
+                                            characters and underscores.
+                                        </div>
+                                        <div class="invalid-feedback">Please provide a valid queue name.</div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" name="Description" id="queueDescription" rows="2"
+                                                placeholder="Brief description of this queue's purpose (optional)"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Queue Type <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i id="queueTypeIcon" class="ri-clockwise-line"></i>
+                                            </span>
+                                            <select class="form-select" name="QueueType" id="queueTypeSelect" required>
+                                                <option value="TurnBased" selected>Turn-Based</option>
+                                                <option value="Simultaneous">Simultaneous</option>
+                                                <option value="Asynchronous">Asynchronous</option>
+                                            </select>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div id="queueTypeDescription" class="form-text">
+                                                Players take turns making moves. Ideal for strategy games and board
+                                                games.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="row">
+                                            <div class="col">
+                                                <label class="form-label">Min Players <span class="text-danger">*</span></label>
+                                                <input type="number" class="form-control" name="MinPlayers"
+                                                    id="minPlayers"
+                                                    min="1" max="64" value="2" required>
+                                            </div>
+                                            <div class="col">
+                                                <label class="form-label">Max Players <span class="text-danger">*</span></label>
+                                                <input type="number" class="form-control" name="MaxPlayers"
+                                                    id="maxPlayers"
+                                                    min="2" max="64" value="2" required>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div id="playerCountInfo" class="form-text">
+                                                Matches will start when min players join and support up to max players.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-light border mt-3">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <i class="ri-information-line text-primary fs-18 align-middle me-2"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div id="queueTypeSummary">
+                                                <h6>Turn-Based Queue</h6>
+                                                <p class="mb-0">
+                                                    Players take actions in sequence. Each player receives a
+                                                    notification when it's their turn to act. Matches can last for
+                                                    extended periods as players may not be online simultaneously.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="IsEnabled"
+                                            id="queueEnabled" checked>
+                                        <label class="form-check-label" for="queueEnabled">Enable Queue</label>
+                                        <div class="form-text">
+                                            When enabled, players can join this queue immediately.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button type="button" class="btn btn-primary" onclick="validateAndGoNext(0)">
+                                        Next <i class="ri-arrow-right-line ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Match Config -->
+                            <div id="match-config" class="content">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Ticket TTL <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="TicketTTLSeconds"
+                                                id="ticketTTL"
+                                                min="10" max="1800" value="300" required>
+                                            <span class="input-group-text">seconds</span>
+                                        </div>
+                                        <div class="form-text">Maximum time a player waits for matchmaking</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Turn Timeout</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="TurnTimeoutSeconds"
+                                                id="turnTimeout"
+                                                min="0" max="604800" value="86400">
+                                            <span class="input-group-text">seconds</span>
+                                        </div>
+                                        <div class="form-text">Maximum time for each turn (0 = no limit)</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Match Timeout</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="MatchTimeoutSeconds"
+                                                id="matchTimeout"
+                                                min="0" max="2592000" value="604800">
+                                            <span class="input-group-text">seconds</span>
+                                        </div>
+                                        <div class="form-text">Total match duration (0 = no limit)</div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <label class="form-label">
+                                            Matchmaking Rules
+                                            <i
+                                                class="ri-question-line text-muted" data-bs-toggle="tooltip"
+                                                title="Define matchmaking criteria and match properties">
+                                            </i>
+                                        </label>
+                                        <div id="rulesEditor" style="height: 300px; border: 1px solid #e9ebec;"></div>
+                                        <div class="d-flex justify-content-end mt-2">
+                                            <button type="button" class="btn btn-sm btn-light" onclick="formatJson()">
+                                                <i class="ri-code-line"></i> Format JSON
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-light border">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <i class="ri-information-line text-primary fs-18 align-middle me-2"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6>Matchmaking Rules</h6>
+                                            <p class="mb-0">
+                                                Rules control how players are matched together. You can
+                                                define skill ranges, team formations, and other criteria. The default
+                                                rules provide balanced matching based on your queue type.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button type="button" class="btn btn-light" onclick="queueWizard.previous()">
+                                        <i class="ri-arrow-left-line me-1"></i> Previous
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="validateAndGoNext(1)">
+                                        Next <i class="ri-arrow-right-line ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Match Functions -->
+                            <div id="matchmaker-functions" class="content">
+                                <div class="alert alert-primary" role="alert">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <i class="ri-information-line fs-18 align-middle me-2"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6>Connect Cloud Functions</h6>
+                                            <p class="mb-0" id="matchFunctionsInfo">
+                                                These functions handle match
+                                                lifecycle events and game logic. At minimum, you need initialization and
+                                                transition functions.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-danger me-2">Required</span>
+                                        <label class="form-label mb-0">Match Initialization Function</label>
+                                    </div>
+                                    <select class="form-select" name="InitializeFunctionId" id="initializeFunction"
+                                            required>
+                                        <option value="">Select a function...</option>
+                                        @foreach (var func in Model.AvailableFunctions)
+                                        {
+                                            <option value="@func.Id">@func.Name (@func.ActionType)</option>
+                                        }
+                                    </select>
+                                    <div class="form-text">
+                                        <i class="ri-play-circle-line me-1 text-muted"></i>
+                                        Called when a match is created. Initializes match state and player positions.
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-danger me-2">Required</span>
+                                        <label class="form-label mb-0">Match Transition Function</label>
+                                    </div>
+                                    <select class="form-select" name="TransitionFunctionId" id="transitionFunction"
+                                            required>
+                                        <option value="">Select a function...</option>
+                                        @foreach (var func in Model.AvailableFunctions)
+                                        {
+                                            <option value="@func.Id">@func.Name (@func.ActionType)</option>
+                                        }
+                                    </select>
+                                    <div class="form-text">
+                                        <i class="ri-refresh-line me-1 text-muted"></i>
+                                        Called when a player submits an action. Validates moves and updates match state.
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-secondary me-2">Optional</span>
+                                        <label class="form-label mb-0">Match Leave Function</label>
+                                    </div>
+                                    <select class="form-select" name="LeaveFunctionId" id="leaveFunction">
+                                        <option value="">Select a function...</option>
+                                        @foreach (var func in Model.AvailableFunctions)
+                                        {
+                                            <option value="@func.Id">@func.Name (@func.ActionType)</option>
+                                        }
+                                    </select>
+                                    <div class="form-text">
+                                        <i class="ri-logout-box-line me-1 text-muted"></i>
+                                        Called when a player leaves a match. Handles player disconnection logic.
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-secondary me-2">Optional</span>
+                                        <label class="form-label mb-0">Match End Function</label>
+                                    </div>
+                                    <select class="form-select" name="EndFunctionId" id="endFunction">
+                                        <option value="">Select a function...</option>
+                                        @foreach (var func in Model.AvailableFunctions)
+                                        {
+                                            <option value="@func.Id">@func.Name (@func.ActionType)</option>
+                                        }
+                                    </select>
+                                    <div class="form-text">
+                                        <i class="ri-stop-circle-line me-1 text-muted"></i>
+                                        Called when a match completes. Handles match finalization and rewards.
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-light border">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="ri-lightbulb-line text-warning fs-18 align-middle me-2"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-0">
+                                                Don't have the functions you need?
+                                                <a href="/game/@Model.GameId/functions" class="fw-medium">
+                                                    Create new
+                                                    functions
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button type="button" class="btn btn-light" onclick="queueWizard.previous()">
+                                        <i class="ri-arrow-left-line me-1"></i> Previous
+                                    </button>
+                                    <button type="submit" class="btn btn-success" id="submitButton">
+                                        <i class="ri-check-line me-1"></i> Create Queue
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

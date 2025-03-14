@@ -62,17 +62,8 @@ public class MatchmakingQueuesModel : PageModel
 
     public async Task<IActionResult> OnPostAsync([FromBody] MatchQueueRequest request)
     {
-        try
-        {
-            var result = await _matchmakingClient.CreateQueueAsync(DefaultGameKey.ApiKey, request);
-            return RedirectToPage("/Game/{gameId}/Matchmaking", new { gameId = GameId });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating matchmaking queue for game {GameId}", GameId);
-            ModelState.AddModelError(string.Empty, "Failed to create queue: " + ex.Message);
-            return Page();
-        }
+        var result = await _matchmakingClient.CreateQueueAsync(DefaultGameKey.ApiKey, request);
+        return RedirectToPage("/Game/{gameId}/Matchmaking", new { gameId = GameId });
     }
 
     public async Task<IActionResult> OnPostUpdateAsync([FromBody] MatchQueueRequest request)

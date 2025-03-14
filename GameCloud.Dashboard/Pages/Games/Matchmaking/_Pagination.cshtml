@@ -1,2 +1,32 @@
-@model TModel
+@model MatchmakingQueuesModel
 
+@if (Model.Queues.Pages > 1)
+{
+    <div class="row align-items-center mt-4">
+        <div class="col-sm text-muted">
+            Showing @((Model.Queues.Index * Model.Queues.Size) + 1) to
+            @Math.Min((Model.Queues.Index + 1) * Model.Queues.Size, Model.Queues.Count)
+            of @Model.Queues.Count queues
+        </div>
+        <div class="col-sm-auto">
+            <ul class="pagination mb-0">
+                <li class="page-item @(!Model.Queues.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" href="@Model.GetPageUrl(Model.Queues.Index - 1)">
+                        <i class="ri-arrow-left-s-line"></i>
+                    </a>
+                </li>
+                @for (int i = 0; i < Model.Queues.Pages; i++)
+                {
+                    <li class="page-item @(Model.Queues.Index == i ? "active" : "")">
+                        <a class="page-link" href="@Model.GetPageUrl(i)">@(i + 1)</a>
+                    </li>
+                }
+                <li class="page-item @(!Model.Queues.HasNextPage ? "disabled" : "")">
+                    <a class="page-link" href="@Model.GetPageUrl(Model.Queues.Index + 1)">
+                        <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+}

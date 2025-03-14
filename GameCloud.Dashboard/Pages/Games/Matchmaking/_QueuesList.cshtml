@@ -1,2 +1,8 @@
-@model TModel
+@model MatchmakingQueuesModel
 
+<div class="row g-4">
+    @foreach (var queue in Model.Queues.Items)
+    {
+        <partial name="_QueueCard" model="queue" />
+    }
+</div>

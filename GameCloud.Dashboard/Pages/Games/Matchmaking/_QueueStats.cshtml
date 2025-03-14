@@ -1,0 +1,76 @@
+@model MatchmakingQueuesModel
+
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Active Queues</h6>
+                        @* <h2 class="mb-0">@Model.Stats.ActiveQueues</h2> *@
+                        <h2 class="mb-0">2</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                            <i class="ri-queue-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Active Matches (24h)</h6>
+                        @* <h2 class="mb-0">@Model.Stats.ActiveMatches</h2> *@
+                        <h2 class="mb-0">10</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-success-subtle text-success rounded fs-3">
+                            <i class="ri-team-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Avg Matchmaking Time</h6>
+                        @* <h2 class="mb-0">@Model.Stats.AvgMatchmakingTime.ToString("0.0")s</h2> *@
+                        <h2 class="mb-0">0.2s</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-warning-subtle text-warning rounded fs-3">
+                            <i class="ri-time-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-3">Matchmaking Rate</h6>
+                        @* <h2 class="mb-0">@Model.Stats.MatchmakingSuccessRate.ToString("0.0")%</h2> *@
+                        <h2 class="mb-0">20%</h2>
+                    </div>
+                    <div class="flex-shrink-0 avatar-sm">
+                        <span class="avatar-title bg-info-subtle text-info rounded fs-3">
+                            <i class="ri-percent-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

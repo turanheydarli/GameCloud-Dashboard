@@ -17,4 +17,34 @@
     {
         <link href="@style" rel="stylesheet" type="text/css"/>
     }
+
+    <style>
+        .modal {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-dialog {
+            max-width: 800px;
+            margin: 1.75rem auto;
+        }
+
+        .bs-stepper .content {
+            display: none;
+        }
+
+        .bs-stepper .content.active {
+            display: block;
+        }
+
+        /* Fix stepper visibility */
+        .bs-stepper-content {
+            min-height: 400px;
+        }
+
+        .modal-body {
+            max-height: calc(100vh - 210px);
+            overflow-y: auto;
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bs-stepper/dist/css/bs-stepper.min.css" rel="stylesheet">
 </head>

@@ -1,2 +1,156 @@
-@model TModel
+@model GameCloud.Dashboard.Models.Responses.MatchmakingResponse
 
+@{
+    string GetQueueTypeName(string queueType) =>
+        queueType switch
+        {
+            "TurnBased" => "Turn-Based",
+            "Simultaneous" => "Simultaneous",
+            "Asynchronous" => "Asynchronous",
+            _ => queueType
+        };
+
+    string GetQueueTypeColor(string queueType) =>
+        queueType switch
+        {
+            "TurnBased" => "primary",
+            "Simultaneous" => "success",
+            "Asynchronous" => "info",
+            _ => "secondary"
+        };
+
+    string GetQueueTypeIcon(string queueType) =>
+        queueType switch
+        {
+            "TurnBased" => "ri-clockwise-line",
+            "Simultaneous" => "ri-group-line",
+            "Asynchronous" => "ri-time-line",
+            _ => "ri-gamepad-line"
+        };
+}
+<div class="col-xxl-4 col-lg-6">
+    <div class="card h-100">
+        <div class="card-body">
+            <!-- Queue Header -->
+            <div class="d-flex align-items-center mb-3">
+                <div class="flex-shrink-0">
+                    <div
+                        class="avatar-md bg-@GetQueueTypeColor(Model.QueueType.ToString())-subtle text-@GetQueueTypeColor(Model.QueueType.ToString()) rounded-circle">
+                        <i class="@GetQueueTypeIcon(Model.QueueType.ToString()) fs-20"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="d-flex align-items-center">
+                        <h5 class="mb-1">@Model.Name</h5>
+                        <div class="form-check form-switch ms-auto">
+                            <input class="form-check-input" type="checkbox"
+                                   data-action="toggle-queue"
+                                   data-queue-id="@Model.Id"
+                                   @(Model.IsEnabled ? "checked" : "")>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-0">
+                        <span
+                            class="badge bg-@GetQueueTypeColor(Model.QueueType.ToString())-subtle text-@GetQueueTypeColor(Model.QueueType.ToString())">
+                            @GetQueueTypeName(Model.QueueType.ToString())
+                        </span>
+                        <span class="ms-2">@Model.MinPlayers - @Model.MaxPlayers players</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Queue Stats -->
+            <div class="row text-center mb-3">
+                <div class="col-4">
+                    <div class="p-2 border border-dashed rounded">
+                        <h5 class="mb-1" id="active-matches-@Model.Id">...</h5>
+                        <p class="text-muted mb-0 fs-12">Active Matches</p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-2 border border-dashed rounded">
+                        <h5 class="mb-1" id="waiting-players-@Model.Id">...</h5>
+                        <p class="text-muted mb-0 fs-12">Waiting Players</p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-2 border border-dashed rounded">
+                        <h5 class="mb-1" id="avg-wait-@Model.Id">...</h5>
+                        <p class="text-muted mb-0 fs-12">Avg Wait Time</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Queue Details -->
+            <div class="mb-3 overflow-hidden">
+                <h6 class="text-muted text-uppercase mb-3 fs-11">Queue Configuration</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <span class="text-muted fs-12">Ticket TTL:</span>
+                            <span class="fs-13 fw-medium">@Model.TicketTTL</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <span class="text-muted fs-12">Turn Timeout:</span>
+                            @* <span class="fs-13 fw-medium">@FormatTimeSpan(Model.TurnTimeout)</span> *@
+                            1
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <span class="text-muted fs-12">Match Timeout:</span>
+                            @* <span class="fs-13 fw-medium">@FormatTimeSpan(Model.MatchTimeout)</span> *@
+                            1
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <span class="text-muted fs-12">Created:</span>
+                            <span class="fs-13 fw-medium">@Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+
+                @* @if (!string.IsNullOrEmpty(Model.Description)) *@
+                @* { *@
+                @*     <p class="text-muted fs-13 mt-2 mb-0">@Model.Description</p> *@
+                @* } *@
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2">
+                <a href="/game/@Model.GameId/matchmaking/@Model.Id"
+                   class="btn btn-sm btn-soft-primary flex-grow-1">
+                    <i class="ri-dashboard-line align-bottom me-1"></i> Queue Dashboard
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-icon btn-soft-secondary" data-bs-toggle="dropdown">
+                        <i class="ri-more-2-fill"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="#"
+                           data-action="edit"
+                           data-queue-id="@Model.Id">
+                            <i class="ri-pencil-line align-bottom me-2 text-muted"></i> Edit Queue
+                        </a>
+                        <a class="dropdown-item" href="/game/@Model.GameId/matchmaking/@Model.Id/matches">
+                            <i class="ri-team-line align-bottom me-2 text-muted"></i> Active Matches
+                        </a>
+                        <a class="dropdown-item" href="/game/@Model.GameId/matchmaking/@Model.Id/logs">
+                            <i class="ri-history-line align-bottom me-2 text-muted"></i> Logs & Analytics
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="#"
+                           data-action="delete"
+                           data-queue-id="@Model.Id"
+                           data-queue-name="@Model.Name">
+                            <i class="ri-delete-bin-line align-bottom me-2"></i> Delete Queue
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
